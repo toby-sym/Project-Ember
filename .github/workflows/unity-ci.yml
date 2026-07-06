@@ -17,7 +17,6 @@ jobs:
   editmode-tests:
     name: EditMode Tests
     runs-on: ubuntu-latest
-    if: ${{ secrets.UNITY_LICENSE != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,7 +55,6 @@ jobs:
     name: Windows Build
     runs-on: ubuntu-latest
     needs: editmode-tests
-    if: ${{ secrets.UNITY_LICENSE != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
