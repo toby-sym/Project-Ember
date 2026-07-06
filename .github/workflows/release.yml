@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish, for example v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release-windows:
+    name: Build And Release Windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-release-${{ runner.os }}-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            Library-release-${{ runner.os }}-
+            Library-build-${{ runner.os }}-
+            Library-${{ runner.os }}-
+
+      - name: Build Windows player
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          unityVersion: 6000.3.7f1
+          targetPlatform: StandaloneWindows64
+          buildsPath: Builds
+          buildName: ProjectEmber
+          buildMethod: ProjectEmber.Editor.ProjectEmberBuildAutomation.BuildWindows64
+
+      - name: Package Windows build
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          fi
+          cd Builds
+          zip -r "../ProjectEmber-${tag}-Windows.zip" StandaloneWindows64
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          name: Project Ember ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          files: ProjectEmber-*-Windows.zip
+
+      - name: Upload packaged release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProjectEmber-Windows-Release
+          path: ProjectEmber-*-Windows.zip
