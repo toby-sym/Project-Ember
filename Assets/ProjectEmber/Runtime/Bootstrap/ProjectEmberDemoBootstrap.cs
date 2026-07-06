@@ -54,8 +54,8 @@ namespace ProjectEmber.Bootstrap
             var body = player.GetComponent<Rigidbody2D>() ?? player.AddComponent<Rigidbody2D>();
             body.gravityScale = 0f;
             body.freezeRotation = true;
-            player.GetComponent<PlayerTopDownController>() ?? player.AddComponent<PlayerTopDownController>();
-            player.GetComponent<ProceduralWalkBobbing>() ?? player.AddComponent<ProceduralWalkBobbing>();
+            var movement = player.GetComponent<PlayerTopDownController>() ?? player.AddComponent<PlayerTopDownController>();
+            var bobbing = player.GetComponent<ProceduralWalkBobbing>() ?? player.AddComponent<ProceduralWalkBobbing>();
             var gather = player.GetComponent<ToolGatheringController>() ?? player.AddComponent<ToolGatheringController>();
             gather.Initialize(inventory);
 
@@ -94,8 +94,8 @@ namespace ProjectEmber.Bootstrap
             var uiRoot = GameObject.Find("UI") ?? new GameObject("UI");
             var canvas = uiRoot.GetComponent<Canvas>() ?? uiRoot.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            uiRoot.GetComponent<CanvasScaler>() ?? uiRoot.AddComponent<CanvasScaler>();
-            uiRoot.GetComponent<GraphicRaycaster>() ?? uiRoot.AddComponent<GraphicRaycaster>();
+            var canvasScaler = uiRoot.GetComponent<CanvasScaler>() ?? uiRoot.AddComponent<CanvasScaler>();
+            var graphicRaycaster = uiRoot.GetComponent<GraphicRaycaster>() ?? uiRoot.AddComponent<GraphicRaycaster>();
 
             if (FindFirstObjectByType<EventSystem>() == null)
             {
@@ -150,7 +150,7 @@ namespace ProjectEmber.Bootstrap
         private static void SetupSimulation()
         {
             var systems = GameObject.Find("Systems") ?? new GameObject("Systems");
-            systems.GetComponent<TimeSimulationEngine>() ?? systems.AddComponent<TimeSimulationEngine>();
+            var simulation = systems.GetComponent<TimeSimulationEngine>() ?? systems.AddComponent<TimeSimulationEngine>();
         }
     }
 }

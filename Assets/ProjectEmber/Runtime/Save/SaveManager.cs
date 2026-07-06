@@ -12,7 +12,7 @@ namespace ProjectEmber.Save
             var json = JsonUtility.ToJson(profile);
             var bytes = Encoding.UTF8.GetBytes(json);
             using var output = new MemoryStream();
-            using (var gzip = new GZipStream(output, CompressionLevel.Optimal))
+            using (var gzip = new GZipStream(output, System.IO.Compression.CompressionLevel.Optimal))
             {
                 gzip.Write(bytes, 0, bytes.Length);
             }
