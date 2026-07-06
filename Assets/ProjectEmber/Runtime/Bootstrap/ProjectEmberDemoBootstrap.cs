@@ -89,6 +89,8 @@ namespace ProjectEmber.Bootstrap
             camera.orthographic = true;
             camera.orthographicSize = 7f;
             camera.transform.position = new Vector3(0f, 0f, -10f);
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(0.1f, 0.12f, 0.12f, 1f);
             var follow = camera.GetComponent<CameraFollow2D>() ?? camera.gameObject.AddComponent<CameraFollow2D>();
             follow.SetTarget(player);
         }
