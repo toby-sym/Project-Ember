@@ -125,9 +125,9 @@ namespace ProjectEmber.World
         {
             var localRandom = new System.Random(seed ^ chunkCoords.x ^ chunkCoords.y);
             
-            for (var y = 0; y < WorldChunk.Size; y += 4)
+            for (var y = 0; y < WorldChunk.Size; y += 2)
             {
-                for (var x = 0; x < WorldChunk.Size; x += 4)
+                for (var x = 0; x < WorldChunk.Size; x += 2)
                 {
                     if (usePixelArt)
                     {
@@ -176,13 +176,13 @@ namespace ProjectEmber.World
             var tile = chunk.GetTile(x, y);
             var patch = new GameObject($"Ground {x}, {y}");
             patch.transform.SetParent(parent, false);
-            patch.transform.localPosition = new Vector3(x + 2f, y + 2f, 0f);
+            patch.transform.localPosition = new Vector3(x + 1f, y + 1f, 0f);
 
             var meshRenderer = patch.AddComponent<RuntimeMeshRenderer>();
             meshRenderer.UsePixelArt = true;
 
             var data = ScriptableObject.CreateInstance<VectorSpriteData>();
-            var layer = ProceduralShapeUtility.GenerateBoxPolygon(4f, 4f);
+            var layer = ProceduralShapeUtility.GenerateBoxPolygon(2f, 2f);
             layer.Color = Color.white;
             data.Layers.Add(layer);
 
