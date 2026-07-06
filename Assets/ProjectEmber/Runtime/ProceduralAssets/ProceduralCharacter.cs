@@ -10,6 +10,10 @@ namespace ProjectEmber.ProceduralAssets
         [SerializeField] private Color hairColor = new(0.16f, 0.09f, 0.04f);
         [SerializeField] private Color clothingColor = new(0.18f, 0.34f, 0.42f);
         [SerializeField] private Color skinTone = new(0.82f, 0.56f, 0.38f);
+
+        public Color HairColor => hairColor;
+        public Color ClothingColor => clothingColor;
+        public Color SkinTone => skinTone;
         
         private RuntimeMeshRenderer meshRenderer;
         private Texture2D characterTexture;

@@ -31,7 +31,7 @@ namespace ProjectEmber.Bootstrap
 
         private void Start()
         {
-            Rendering.PixelArtSpriteManager.Instance;
+            var _ = Rendering.PixelArtSpriteManager.Instance;
             
             inventory = new InventorySystem(8);
             inventory.TryAddItem(ItemType.Axe, 1);
