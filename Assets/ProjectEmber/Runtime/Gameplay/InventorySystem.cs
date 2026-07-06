@@ -3,7 +3,7 @@ using ProjectEmber.Shared;
 
 namespace ProjectEmber.Gameplay
 {
-    public sealed class InventorySystem
+    public sealed class InventorySystem : IItemInventory
     {
         private readonly InventorySlot[] slots;
 

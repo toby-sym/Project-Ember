@@ -1,4 +1,3 @@
-using ProjectEmber.Gameplay;
 using ProjectEmber.Shared;
 using UnityEngine;
 
@@ -25,7 +24,7 @@ namespace ProjectEmber.World
             health = Mathf.Max(1, startingHealth);
         }
 
-        public bool TryDamage(int amount, InventorySystem inventory)
+        public bool TryDamage(int amount, IItemInventory inventory)
         {
             if (harvested)
             {
@@ -42,7 +41,7 @@ namespace ProjectEmber.World
             return true;
         }
 
-        private void Harvest(InventorySystem inventory)
+        private void Harvest(IItemInventory inventory)
         {
             harvested = true;
             chunkManager?.HarvestTree(chunkCoordinates, localTile, 0, 0);
@@ -50,7 +49,7 @@ namespace ProjectEmber.World
             Destroy(gameObject);
         }
 
-        private void SpawnDrop(InventorySystem inventory)
+        private void SpawnDrop(IItemInventory inventory)
         {
             var drop = new GameObject($"Logs Drop {occupantId}");
             drop.transform.position = transform.position + new Vector3(0f, 0.5f, 0f);

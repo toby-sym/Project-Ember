@@ -1,4 +1,3 @@
-using ProjectEmber.Gameplay;
 using ProjectEmber.ProceduralAssets;
 using ProjectEmber.Rendering;
 using ProjectEmber.Shared;
@@ -15,11 +14,11 @@ namespace ProjectEmber.World
         [SerializeField] private float bobSpeed = 4f;
         [SerializeField] private float bobHeight = 0.12f;
 
-        private InventorySystem inventory;
+        private IItemInventory inventory;
         private Vector3 startPosition;
         private float phase;
 
-        public void Initialize(ItemType type, int amount, InventorySystem targetInventory)
+        public void Initialize(ItemType type, int amount, IItemInventory targetInventory)
         {
             itemType = type;
             quantity = Mathf.Max(1, amount);
