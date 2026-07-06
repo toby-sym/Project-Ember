@@ -32,6 +32,9 @@ namespace ProjectEmber.ProceduralAssets
             var data = CreateTreeSpriteData(seed);
             renderer.BuildMeshFromVectorData(data);
             DisposeTemporaryData(data);
+            var collider = tree.AddComponent<CircleCollider2D>();
+            collider.radius = 0.75f;
+            collider.offset = new Vector2(0f, 0.35f);
             return tree;
         }
 
