@@ -13,6 +13,7 @@ Shader "ProjectEmber/Unlit Vertex Color"
         {
             Name "UnlitVertexColor"
             Tags { "LightMode" = "UniversalForward" }
+            Cull Off
 
             HLSLPROGRAM
             #pragma vertex vert
