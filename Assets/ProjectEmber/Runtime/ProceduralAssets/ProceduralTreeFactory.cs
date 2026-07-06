@@ -22,20 +22,69 @@ namespace ProjectEmber.ProceduralAssets
 
         public static GameObject CreateTree(string name, int seed, Transform parent = null)
         {
+            return CreateTree(name, seed, parent, true);
+        }
+
+        public static GameObject CreateTree(string name, int seed, Transform parent, bool usePixelArt)
+        {
             var tree = new GameObject(name);
             if (parent != null)
             {
                 tree.transform.SetParent(parent, false);
             }
 
-            var renderer = tree.AddComponent<RuntimeMeshRenderer>();
-            var data = CreateTreeSpriteData(seed);
-            renderer.BuildMeshFromVectorData(data);
-            DisposeTemporaryData(data);
+            if (usePixelArt)
+            {
+                CreatePixelArtTree(tree, seed);
+            }
+            else
+            {
+                CreateGeometricTree(tree, seed);
+            }
+
             var collider = tree.AddComponent<CircleCollider2D>();
             collider.radius = 0.75f;
             collider.offset = new Vector2(0f, 0.35f);
             return tree;
+        }
+
+        private static void CreatePixelArtTree(GameObject tree, int seed)
+        {
+            var random = new System.Random(seed);
+            var barkColor = BarkPalette[random.Next(BarkPalette.Length)];
+            var leafColors = new Color[3];
+            for (var i = 0; i < 3; i++)
+            {
+                leafColors[i] = LeafPalette[random.Next(LeafPalette.Length)];
+            }
+
+            var meshRenderer = tree.AddComponent<RuntimeMeshRenderer>();
+            meshRenderer.UsePixelArt = true;
+
+            var data = ScriptableObject.CreateInstance<VectorSpriteData>();
+            var layer = ProceduralShapeUtility.GenerateBoxPolygon(1.5f, 2f);
+            layer.Color = Color.white;
+            data.Layers.Add(layer);
+
+            meshRenderer.BuildMeshFromVectorData(data, seed);
+
+            // Generate and apply pixel art texture
+            var treeTexture = ProceduralPixelArtGenerator.GenerateTreeTexture(barkColor, leafColors, seed, 32);
+            if (tree.GetComponent<MeshRenderer>() != null)
+            {
+                tree.GetComponent<MeshRenderer>().material.mainTexture = treeTexture;
+            }
+
+            DisposeTemporaryData(data);
+        }
+
+        private static void CreateGeometricTree(GameObject tree, int seed)
+        {
+            var renderer = tree.AddComponent<RuntimeMeshRenderer>();
+            renderer.UsePixelArt = false;
+            var data = CreateTreeSpriteData(seed);
+            renderer.BuildMeshFromVectorData(data);
+            DisposeTemporaryData(data);
         }
 
         public static VectorSpriteData CreateTreeSpriteData(int seed)

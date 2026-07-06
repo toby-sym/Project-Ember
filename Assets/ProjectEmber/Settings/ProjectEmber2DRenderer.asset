@@ -24,9 +24,11 @@ MonoBehaviour:
     probeSamplingDebugMesh: {fileID: 0}
     probeSamplingDebugTexture: {fileID: 0}
     probeVolumeBlendStatesCS: {fileID: 0}
-  m_RendererFeatures: []
-  m_RendererFeatureMap: 
-  m_UseNativeRenderPass: 0
+  m_RendererFeatures:
+  - {fileID: 0}
+  m_RendererFeatureMap:
+  - {fileID: 0}
+  m_UseNativeRenderPass: 1
   m_LayerMask:
     serializedVersion: 2
     m_Bits: 4294967295

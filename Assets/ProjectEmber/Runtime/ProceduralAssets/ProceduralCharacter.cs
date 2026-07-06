@@ -5,38 +5,49 @@ namespace ProjectEmber.ProceduralAssets
 {
     public sealed class ProceduralCharacter : MonoBehaviour
     {
+        [SerializeField] private PixelArtCharacterData characterData;
+        [SerializeField] private bool usePixelArt = true;
         [SerializeField] private Color hairColor = new(0.16f, 0.09f, 0.04f);
         [SerializeField] private Color clothingColor = new(0.18f, 0.34f, 0.42f);
         [SerializeField] private Color skinTone = new(0.82f, 0.56f, 0.38f);
+        
+        private RuntimeMeshRenderer meshRenderer;
+        private Texture2D characterTexture;
 
-        public Color HairColor
+        public PixelArtCharacterData CharacterData
         {
-            get => hairColor;
-            set => hairColor = value;
+            get => characterData;
+            set => characterData = value;
         }
 
-        public Color ClothingColor
+        public bool UsePixelArt
         {
-            get => clothingColor;
-            set => clothingColor = value;
+            get => usePixelArt;
+            set => usePixelArt = value;
         }
 
-        public Color SkinTone
+        private void Awake()
         {
-            get => skinTone;
-            set => skinTone = value;
+            meshRenderer = GetComponent<RuntimeMeshRenderer>();
+            if (meshRenderer == null)
+            {
+                meshRenderer = gameObject.AddComponent<RuntimeMeshRenderer>();
+            }
+            meshRenderer.UsePixelArt = usePixelArt;
         }
 
         public void Rebuild()
         {
-            ClearChildren();
-            AddPart("Torso", new Vector2(0f, 0.15f), ProceduralShapeUtility.GenerateCapsulePolygon(0.56f, 0.9f), clothingColor, 0);
-            AddPart("Head", new Vector2(0f, 0.86f), ProceduralShapeUtility.GenerateCirclePolygon(0.28f, 18), skinTone, 10);
-            AddPart("Hair", new Vector2(0f, 1.02f), ProceduralShapeUtility.GenerateCirclePolygon(0.3f, 14), hairColor, 11);
-            AddPart("LeftArm", new Vector2(-0.45f, 0.15f), ProceduralShapeUtility.GenerateCapsulePolygon(0.18f, 0.72f), skinTone, -1, 18f);
-            AddPart("RightArm", new Vector2(0.45f, 0.15f), ProceduralShapeUtility.GenerateCapsulePolygon(0.18f, 0.72f), skinTone, -1, -18f);
-            AddPart("LeftLeg", new Vector2(-0.16f, -0.55f), ProceduralShapeUtility.GenerateCapsulePolygon(0.2f, 0.75f), clothingColor, -2);
-            AddPart("RightLeg", new Vector2(0.16f, -0.55f), ProceduralShapeUtility.GenerateCapsulePolygon(0.2f, 0.75f), clothingColor, -2);
+            meshRenderer.UsePixelArt = usePixelArt;
+            
+            if (usePixelArt)
+            {
+                BuildPixelArtCharacter();
+            }
+            else
+            {
+                BuildGeometricCharacter();
+            }
         }
 
         public void RandomizeAppearance(int seed)
@@ -48,7 +59,49 @@ namespace ProjectEmber.ProceduralAssets
                 RandomRange(random, 0.55f, 0.92f),
                 RandomRange(random, 0.36f, 0.68f),
                 RandomRange(random, 0.24f, 0.5f));
+            
             Rebuild();
+        }
+
+        private void BuildPixelArtCharacter()
+        {
+            var seed = hairColor.GetHashCode() + clothingColor.GetHashCode() + skinTone.GetHashCode();
+            characterTexture = ProceduralPixelArtGenerator.GenerateCharacterTexture(
+                hairColor, clothingColor, skinTone, seed, 32);
+            
+            // Create simple quad with character texture
+            var data = ScriptableObject.CreateInstance<VectorSpriteData>();
+            var layer = ProceduralShapeUtility.GenerateBoxPolygon(1f, 1.5f);
+            layer.Color = Color.white;
+            data.Layers.Add(layer);
+            
+            meshRenderer.BuildMeshFromVectorData(data, seed);
+            
+            // Apply the generated texture to the material
+            if (meshRenderer.GetComponent<MeshRenderer>() != null && characterTexture != null)
+            {
+                meshRenderer.GetComponent<MeshRenderer>().material.mainTexture = characterTexture;
+            }
+            
+            DisposeTemporaryData(data);
+        }
+
+        private void BuildGeometricCharacter()
+        {
+            var data = ScriptableObject.CreateInstance<VectorSpriteData>();
+            
+            data.Layers.Add(new VectorLayer(
+                ProceduralShapeUtility.GenerateCapsulePolygon(0.56f, 0.9f).Points,
+                clothingColor, 0));
+            data.Layers.Add(new VectorLayer(
+                ProceduralShapeUtility.GenerateCirclePolygon(0.28f, 18).Points,
+                skinTone, 10));
+            data.Layers.Add(new VectorLayer(
+                ProceduralShapeUtility.GenerateCirclePolygon(0.3f, 14).Points,
+                hairColor, 11));
+            
+            meshRenderer.BuildMeshFromVectorData(data);
+            DisposeTemporaryData(data);
         }
 
         private void Reset()
@@ -56,35 +109,11 @@ namespace ProjectEmber.ProceduralAssets
             Rebuild();
         }
 
-        private void AddPart(string partName, Vector2 localPosition, VectorLayer layer, Color color, int sortingOrder, float zRotation = 0f)
+        private void OnDestroy()
         {
-            layer.Color = color;
-            layer.SortingOrderWithinSprite = sortingOrder;
-
-            var part = new GameObject(partName);
-            part.transform.SetParent(transform, false);
-            part.transform.localPosition = localPosition;
-            part.transform.localRotation = Quaternion.Euler(0f, 0f, zRotation);
-
-            var data = ScriptableObject.CreateInstance<VectorSpriteData>();
-            data.Layers.Add(layer);
-            part.AddComponent<RuntimeMeshRenderer>().BuildMeshFromVectorData(data);
-            DisposeTemporaryData(data);
-        }
-
-        private void ClearChildren()
-        {
-            for (var i = transform.childCount - 1; i >= 0; i--)
+            if (characterTexture != null)
             {
-                var child = transform.GetChild(i).gameObject;
-                if (Application.isPlaying)
-                {
-                    Destroy(child);
-                }
-                else
-                {
-                    DestroyImmediate(child);
-                }
+                Destroy(characterTexture);
             }
         }
 

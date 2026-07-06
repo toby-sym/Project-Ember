@@ -7,26 +7,105 @@ namespace ProjectEmber.Rendering
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public sealed class RuntimeMeshRenderer : MonoBehaviour
     {
-        private const string MeshName = "Project Ember Runtime Vector Mesh";
+        private const string MeshName = "Project Ember Runtime Pixel Art Mesh";
+        private const string PixelArtShaderName = "ProjectEmber/Pixel Art";
         private const string VertexColorShaderName = "ProjectEmber/Unlit Vertex Color";
-        private static Material cachedMaterial;
+        private static Material cachedPixelArtMaterial;
+        private static Material cachedVertexColorMaterial;
 
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private Mesh runtimeMesh;
+        private Texture2D pixelArtTexture;
+        private bool usePixelArt = true;
+
+        public bool UsePixelArt
+        {
+            get => usePixelArt;
+            set => usePixelArt = value;
+        }
 
         public Mesh Mesh => runtimeMesh;
 
         private void Awake()
         {
             EnsureComponents();
-            EnsureMaterial();
         }
 
         public void BuildMeshFromVectorData(VectorSpriteData data)
         {
+            BuildMeshFromVectorData(data, 0);
+        }
+
+        public void BuildMeshFromVectorData(VectorSpriteData data, int seed)
+        {
             EnsureComponents();
-            EnsureMaterial();
+
+            if (usePixelArt)
+            {
+                BuildPixelArtMesh(data, seed);
+            }
+            else
+            {
+                BuildVectorMesh(data);
+            }
+        }
+
+        private void BuildPixelArtMesh(VectorSpriteData data, int seed)
+        {
+            EnsurePixelArtMaterial();
+            EnsureMesh();
+
+            if (data == null || data.Layers.Count == 0)
+            {
+                return;
+            }
+
+            // Generate pixel art texture from vector data
+            pixelArtTexture = ProceduralPixelArtGenerator.GeneratePixelArtTexture(
+                data.Layers.ToArray(), 
+                32);
+
+            meshRenderer.sharedMaterial.mainTexture = pixelArtTexture;
+            meshRenderer.sharedMaterial.SetFloat("_PixelSize", 1.0f);
+            meshRenderer.sharedMaterial.SetFloat("_DitherStrength", 0.5f);
+
+            // Create simple quad mesh for texture display
+            runtimeMesh.Clear();
+            var vertices = new List<Vector3>
+            {
+                new Vector3(-0.5f, -0.5f, 0f),
+                new Vector3(0.5f, -0.5f, 0f),
+                new Vector3(0.5f, 0.5f, 0f),
+                new Vector3(-0.5f, 0.5f, 0f)
+            };
+
+            var uvs = new List<Vector2>
+            {
+                new Vector2(0f, 0f),
+                new Vector2(1f, 0f),
+                new Vector2(1f, 1f),
+                new Vector2(0f, 1f)
+            };
+
+            var triangles = new List<int>
+            {
+                0, 2, 1,
+                0, 3, 2
+            };
+
+            runtimeMesh.SetVertices(vertices);
+            runtimeMesh.SetUVs(0, uvs);
+            runtimeMesh.SetTriangles(triangles, 0);
+            runtimeMesh.RecalculateBounds();
+            runtimeMesh.RecalculateNormals();
+
+            Debug.Log($"Built pixel art mesh on {gameObject.name}");
+        }
+
+        private void BuildVectorMesh(VectorSpriteData data)
+        {
+            EnsureVertexColorMaterial();
             EnsureMesh();
 
             runtimeMesh.Clear();
@@ -80,8 +159,8 @@ namespace ProjectEmber.Rendering
             runtimeMesh.SetTriangles(triangles, 0);
             runtimeMesh.RecalculateBounds();
             runtimeMesh.RecalculateNormals();
-            
-            Debug.Log($"Built mesh with {vertices.Count} vertices and {triangles.Count} triangles on {gameObject.name}");
+
+            Debug.Log($"Built vector mesh with {vertices.Count} vertices on {gameObject.name}");
         }
 
         private void EnsureComponents()
@@ -111,22 +190,49 @@ namespace ProjectEmber.Rendering
             meshFilter.sharedMesh = runtimeMesh;
         }
 
-        private void EnsureMaterial()
+        private void EnsurePixelArtMaterial()
         {
-            if (cachedMaterial == null)
+            if (cachedPixelArtMaterial == null)
+            {
+                var shader = Shader.Find(PixelArtShaderName);
+                if (shader == null)
+                {
+                    shader = Shader.Find("Sprites/Default");
+                }
+                
+                cachedPixelArtMaterial = new Material(shader)
+                {
+                    name = "Project Ember Pixel Art Material"
+                };
+            }
+
+            meshRenderer.sharedMaterial = cachedPixelArtMaterial;
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            meshRenderer.receiveShadows = true;
+        }
+
+        private void EnsureVertexColorMaterial()
+        {
+            if (cachedVertexColorMaterial == null)
             {
                 var shader = Shader.Find(VertexColorShaderName) ?? Shader.Find("Sprites/Default");
-                cachedMaterial = new Material(shader)
+                cachedVertexColorMaterial = new Material(shader)
                 {
                     name = "Project Ember Runtime Vertex Color Material"
                 };
             }
 
-            meshRenderer.sharedMaterial = cachedMaterial;
+            meshRenderer.sharedMaterial = cachedVertexColorMaterial;
             meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             meshRenderer.receiveShadows = false;
-            meshRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            meshRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+        }
+
+        private void OnDestroy()
+        {
+            if (pixelArtTexture != null)
+            {
+                Destroy(pixelArtTexture);
+            }
         }
     }
 }

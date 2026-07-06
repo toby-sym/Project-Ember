@@ -10,12 +10,20 @@ namespace ProjectEmber.World
         [SerializeField] private Transform player;
         [SerializeField] private int seed = 20260706;
         [SerializeField] private int visibilityRadius = 1;
+        [SerializeField] private bool usePixelArt = true;
 
         private readonly Dictionary<Vector2Int, GameObject> chunkObjects = new();
         private readonly Queue<GameObject> pool = new();
         private WorldGenerator generator;
         private WorldRegistry registry;
         private Vector2Int currentPlayerChunk = new(int.MinValue, int.MinValue);
+        private System.Random chunkRandom;
+
+        public bool UsePixelArt
+        {
+            get => usePixelArt;
+            set => usePixelArt = value;
+        }
 
         public WorldRegistry Registry => registry;
         public WorldGenerator Generator => generator;
@@ -32,6 +40,7 @@ namespace ProjectEmber.World
             visibilityRadius = Mathf.Max(0, radius);
             generator = new WorldGenerator(seed);
             registry = new WorldRegistry();
+            chunkRandom = new System.Random(seed);
             RefreshVisibleChunks(true);
         }
 
@@ -39,6 +48,7 @@ namespace ProjectEmber.World
         {
             generator ??= new WorldGenerator(seed);
             registry ??= new WorldRegistry();
+            chunkRandom ??= new System.Random(seed);
         }
 
         private void Update()
@@ -108,16 +118,25 @@ namespace ProjectEmber.World
                 Destroy(chunkObject.transform.GetChild(i).gameObject);
             }
 
-            PopulateChunkVisuals(chunk, chunkObject.transform);
+            PopulateChunkVisuals(chunk, chunkObject.transform, coords);
         }
 
-        private void PopulateChunkVisuals(WorldChunk chunk, Transform parent)
+        private void PopulateChunkVisuals(WorldChunk chunk, Transform parent, Vector2Int chunkCoords)
         {
+            var localRandom = new System.Random(seed ^ chunkCoords.x ^ chunkCoords.y);
+            
             for (var y = 0; y < WorldChunk.Size; y += 4)
             {
                 for (var x = 0; x < WorldChunk.Size; x += 4)
                 {
-                    CreateGroundPatch(chunk, parent, x, y);
+                    if (usePixelArt)
+                    {
+                        CreatePixelArtGroundPatch(chunk, parent, x, y, localRandom);
+                    }
+                    else
+                    {
+                        CreateGeometricGroundPatch(chunk, parent, x, y);
+                    }
                 }
             }
 
@@ -128,13 +147,68 @@ namespace ProjectEmber.World
                     var tile = chunk.GetTile(x, y);
                     if (tile.HasOccupant)
                     {
-                        var tree = ProceduralTreeFactory.CreateTree($"Tree {tile.OccupantId}", tile.OccupantId, parent);
+                        var tree = ProceduralTreeFactory.CreateTree($"Tree {tile.OccupantId}", tile.OccupantId, parent, usePixelArt);
                         tree.transform.localPosition = new Vector3(x, y, 0f);
                         var harvestable = tree.AddComponent<HarvestableTree>();
                         harvestable.Initialize(this, chunk.Coordinates, new Vector2Int(x, y), tile.OccupantId, tile.Durability);
                     }
                 }
             }
+        }
+
+        private static void CreateGeometricGroundPatch(WorldChunk chunk, Transform parent, int x, int y)
+        {
+            var tile = chunk.GetTile(x, y);
+            var patch = new GameObject($"Ground {x}, {y}");
+            patch.transform.SetParent(parent, false);
+            patch.transform.localPosition = new Vector3(x + 1.5f, y + 1.5f, 0.25f);
+
+            var layer = ProceduralShapeUtility.GenerateBoxPolygon(4f, 4f);
+            layer.Color = ColorForTile(tile.BaseType);
+            var data = ScriptableObject.CreateInstance<VectorSpriteData>();
+            data.Layers.Add(layer);
+            patch.AddComponent<RuntimeMeshRenderer>().BuildMeshFromVectorData(data);
+            Destroy(data);
+        }
+
+        private static void CreatePixelArtGroundPatch(WorldChunk chunk, Transform parent, int x, int y, System.Random random)
+        {
+            var tile = chunk.GetTile(x, y);
+            var patch = new GameObject($"Ground {x}, {y}");
+            patch.transform.SetParent(parent, false);
+            patch.transform.localPosition = new Vector3(x + 2f, y + 2f, 0f);
+
+            var meshRenderer = patch.AddComponent<RuntimeMeshRenderer>();
+            meshRenderer.UsePixelArt = true;
+
+            var data = ScriptableObject.CreateInstance<VectorSpriteData>();
+            var layer = ProceduralShapeUtility.GenerateBoxPolygon(4f, 4f);
+            layer.Color = Color.white;
+            data.Layers.Add(layer);
+
+            var seed = chunk.Coordinates.GetHashCode() ^ x ^ y;
+            meshRenderer.BuildMeshFromVectorData(data, seed);
+
+            // Generate and apply pixel art tile texture
+            var tileTexture = ProceduralPixelArtGenerator.GenerateTileTexture(tile.BaseType, seed, 32);
+            if (patch.GetComponent<MeshRenderer>() != null)
+            {
+                patch.GetComponent<MeshRenderer>().material.mainTexture = tileTexture;
+                patch.GetComponent<MeshRenderer>().sortingOrder = -100;
+            }
+
+            Destroy(data);
+        }
+
+        private static string GetTileSpriteName(TileType type, System.Random random)
+        {
+            return type switch
+            {
+                TileType.Water => $"Water_{random.Next(1, 4)}",
+                TileType.DeepStone => $"Stone_{random.Next(1, 3)}",
+                TileType.Dirt => $"Dirt_{random.Next(1, 4)}",
+                _ => $"Grass_{random.Next(1, 6)}"
+            };
         }
 
         public void HarvestTree(Vector2Int chunkCoordinates, Vector2Int localTile, int newDurability, int occupantId)
@@ -152,33 +226,18 @@ namespace ProjectEmber.World
 
             if (chunkObjects.TryGetValue(chunkCoordinates, out var chunkObject))
             {
-                RebuildChunkVisuals(chunk, chunkObject.transform);
+                RebuildChunkVisuals(chunk, chunkObject.transform, chunkCoordinates);
             }
         }
 
-        private void RebuildChunkVisuals(WorldChunk chunk, Transform parent)
+        private void RebuildChunkVisuals(WorldChunk chunk, Transform parent, Vector2Int chunkCoords)
         {
             for (var i = parent.childCount - 1; i >= 0; i--)
             {
                 Destroy(parent.GetChild(i).gameObject);
             }
 
-            PopulateChunkVisuals(chunk, parent);
-        }
-
-        private static void CreateGroundPatch(WorldChunk chunk, Transform parent, int x, int y)
-        {
-            var tile = chunk.GetTile(x, y);
-            var patch = new GameObject($"Ground {x}, {y}");
-            patch.transform.SetParent(parent, false);
-            patch.transform.localPosition = new Vector3(x + 1.5f, y + 1.5f, 0.25f);
-
-            var layer = ProceduralShapeUtility.GenerateBoxPolygon(4f, 4f);
-            layer.Color = ColorForTile(tile.BaseType);
-            var data = ScriptableObject.CreateInstance<VectorSpriteData>();
-            data.Layers.Add(layer);
-            patch.AddComponent<RuntimeMeshRenderer>().BuildMeshFromVectorData(data);
-            Destroy(data);
+            PopulateChunkVisuals(chunk, parent, chunkCoords);
         }
 
         private static Color ColorForTile(TileType type)
