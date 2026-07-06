@@ -90,8 +90,18 @@ namespace ProjectEmber.Bootstrap
 
         private void SetupUi()
         {
-            var uiRoot = GameObject.Find("UI") ?? new GameObject("UI");
-            var canvas = uiRoot.GetComponent<Canvas>() ?? uiRoot.AddComponent<Canvas>();
+            var uiRoot = GameObject.Find("UI");
+            if (uiRoot == null || uiRoot.GetComponent<Canvas>() == null)
+            {
+                if (uiRoot != null)
+                {
+                    Destroy(uiRoot);
+                }
+
+                uiRoot = new GameObject("UI", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            }
+
+            var canvas = uiRoot.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             var canvasScaler = uiRoot.GetComponent<CanvasScaler>() ?? uiRoot.AddComponent<CanvasScaler>();
             var graphicRaycaster = uiRoot.GetComponent<GraphicRaycaster>() ?? uiRoot.AddComponent<GraphicRaycaster>();
@@ -133,6 +143,7 @@ namespace ProjectEmber.Bootstrap
             slot.transform.SetParent(parent, false);
             var rect = slot.GetComponent<RectTransform>();
             rect.sizeDelta = new Vector2(64f, 64f);
+            slot.AddComponent<CanvasRenderer>();
             var background = slot.AddComponent<Image>();
             background.color = new Color(0.08f, 0.07f, 0.06f, 0.78f);
 
@@ -143,6 +154,7 @@ namespace ProjectEmber.Bootstrap
             iconRect.anchorMax = Vector2.one;
             iconRect.offsetMin = new Vector2(6f, 6f);
             iconRect.offsetMax = new Vector2(-6f, -6f);
+            iconObject.AddComponent<CanvasRenderer>();
             iconObject.AddComponent<UIVectorIconDisplay>().SetIcon(type);
         }
 
