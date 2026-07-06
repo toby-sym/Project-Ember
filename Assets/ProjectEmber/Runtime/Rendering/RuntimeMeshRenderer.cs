@@ -9,6 +9,7 @@ namespace ProjectEmber.Rendering
     {
         private const string MeshName = "Project Ember Runtime Vector Mesh";
         private const string VertexColorShaderName = "ProjectEmber/Unlit Vertex Color";
+        private static Material cachedMaterial;
 
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
@@ -110,16 +111,20 @@ namespace ProjectEmber.Rendering
 
         private void EnsureMaterial()
         {
-            if (meshRenderer.sharedMaterial != null)
+            if (cachedMaterial == null)
             {
-                return;
+                var shader = Shader.Find(VertexColorShaderName) ?? Shader.Find("Sprites/Default");
+                cachedMaterial = new Material(shader)
+                {
+                    name = "Project Ember Runtime Vertex Color Material"
+                };
             }
 
-            var shader = Shader.Find(VertexColorShaderName) ?? Shader.Find("Sprites/Default");
-            meshRenderer.sharedMaterial = new Material(shader)
-            {
-                name = "Project Ember Runtime Vertex Color Material"
-            };
+            meshRenderer.sharedMaterial = cachedMaterial;
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+            meshRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            meshRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
         }
     }
 }
