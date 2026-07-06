@@ -18,7 +18,6 @@ jobs:
   release-windows:
     name: Build And Release Windows
     runs-on: ubuntu-latest
-    if: ${{ secrets.UNITY_LICENSE != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
