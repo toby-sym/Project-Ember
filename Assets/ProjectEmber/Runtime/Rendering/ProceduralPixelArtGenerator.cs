@@ -5,7 +5,7 @@ namespace ProjectEmber.Rendering
 {
     public static class ProceduralPixelArtGenerator
     {
-        private const int DefaultResolution = 32;
+        private const int DefaultResolution = 64;
         
         public static Texture2D GeneratePixelArtTexture(VectorLayer[] layers, int resolution = DefaultResolution)
         {

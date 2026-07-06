@@ -4,7 +4,7 @@ Shader "ProjectEmber/Pixel Art"
     {
         _MainTex ("Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
-        _PixelSize ("Pixel Size", Float) = 1.0
+        _PixelSize ("Pixel Size", Float) = 32.0
         _PaletteColors ("Palette Colors", ColorArray) = (0,0,0,0)
         _PaletteSize ("Palette Size", Int) = 0
         _DitherStrength ("Dither Strength", Range(0,1)) = 0.5
@@ -55,6 +55,7 @@ Shader "ProjectEmber/Pixel Art"
             float4 _MainTex_ST;
             float4 _Color;
             float _PixelSize;
+            float _WorldPixelSize;
             float4 _PaletteColors[16];
             int _PaletteSize;
             float _DitherStrength;
@@ -143,7 +144,7 @@ Shader "ProjectEmber/Pixel Art"
             half4 frag(Varyings input) : SV_Target
             {
                 float2 texelSize = 1.0 / float2(textureSize(_MainTex, 0));
-                float2 pixelatedUV = floor(input.uv / texelSize * _PixelSize) / _PixelSize * texelSize;
+                float2 pixelatedUV = floor(input.uv * _WorldPixelSize) / _WorldPixelSize;
                 
                 float4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, pixelatedUV);
                 float3 finalColor = texColor.rgb * _Color.rgb * input.color.rgb;
@@ -202,6 +203,7 @@ Shader "ProjectEmber/Pixel Art"
             float4 _MainTex_ST;
             float4 _Color;
             float _PixelSize;
+            float _WorldPixelSize;
             float4 _PaletteColors[16];
             int _PaletteSize;
             float _DitherStrength;
@@ -263,7 +265,7 @@ Shader "ProjectEmber/Pixel Art"
             half4 frag(Varyings input) : SV_Target
             {
                 float2 texelSize = 1.0 / float2(textureSize(_MainTex, 0));
-                float2 pixelatedUV = floor(input.uv / texelSize * _PixelSize) / _PixelSize * texelSize;
+                float2 pixelatedUV = floor(input.uv * _WorldPixelSize) / _WorldPixelSize;
                 
                 float4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, pixelatedUV);
                 float3 finalColor = texColor.rgb * _Color.rgb * input.color.rgb;

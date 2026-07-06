@@ -161,7 +161,7 @@ namespace ProjectEmber.World
             var tile = chunk.GetTile(x, y);
             var patch = new GameObject($"Ground {x}, {y}");
             patch.transform.SetParent(parent, false);
-            patch.transform.localPosition = new Vector3(x + 1.5f, y + 1.5f, 0.25f);
+            patch.transform.localPosition = new Vector3(x, y, 0.25f);
 
             var layer = ProceduralShapeUtility.GenerateBoxPolygon(4f, 4f);
             layer.Color = ColorForTile(tile.BaseType);
@@ -176,7 +176,7 @@ namespace ProjectEmber.World
             var tile = chunk.GetTile(x, y);
             var patch = new GameObject($"Ground {x}, {y}");
             patch.transform.SetParent(parent, false);
-            patch.transform.localPosition = new Vector3(x + 1f, y + 1f, 0f);
+            patch.transform.localPosition = new Vector3(x, y, 0f);
 
             var meshRenderer = patch.AddComponent<RuntimeMeshRenderer>();
             meshRenderer.UsePixelArt = true;
@@ -191,12 +191,13 @@ namespace ProjectEmber.World
 
             // Generate and apply pixel art tile texture
             var baseColor = ColorForTile(tile.BaseType);
-            var tileTexture = ProceduralPixelArtGenerator.GenerateTileTexture(baseColor, seed, 32);
+            var tileTexture = ProceduralPixelArtGenerator.GenerateTileTexture(baseColor, seed, 64);
             
             var renderer = patch.GetComponent<MeshRenderer>();
             if (renderer != null && tileTexture != null)
             {
                 renderer.material.mainTexture = tileTexture;
+                renderer.material.SetFloat("_WorldPixelSize", 32.0f);
                 renderer.sortingOrder = -100;
             }
 

@@ -64,20 +64,21 @@ namespace ProjectEmber.Rendering
             // Generate pixel art texture from vector data
             pixelArtTexture = ProceduralPixelArtGenerator.GeneratePixelArtTexture(
                 data.Layers.ToArray(), 
-                32);
+                64);
 
             meshRenderer.sharedMaterial.mainTexture = pixelArtTexture;
-            meshRenderer.sharedMaterial.SetFloat("_PixelSize", 1.0f);
+            meshRenderer.sharedMaterial.SetFloat("_PixelSize", 32.0f);
+            meshRenderer.sharedMaterial.SetFloat("_WorldPixelSize", 32.0f);
             meshRenderer.sharedMaterial.SetFloat("_DitherStrength", 0.5f);
 
-            // Create simple quad mesh for texture display
+            // Create simple quad mesh for texture display (2x2 unit tiles)
             runtimeMesh.Clear();
             var vertices = new List<Vector3>
             {
-                new Vector3(-0.5f, -0.5f, 0f),
-                new Vector3(0.5f, -0.5f, 0f),
-                new Vector3(0.5f, 0.5f, 0f),
-                new Vector3(-0.5f, 0.5f, 0f)
+                new Vector3(-1.0f, -1.0f, 0f),
+                new Vector3(1.0f, -1.0f, 0f),
+                new Vector3(1.0f, 1.0f, 0f),
+                new Vector3(-1.0f, 1.0f, 0f)
             };
 
             var uvs = new List<Vector2>
