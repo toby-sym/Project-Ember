@@ -58,5 +58,18 @@ namespace ProjectEmber.Gameplay
             OnInventoryChanged?.Invoke();
             return true;
         }
+
+        public bool HasItem(ItemType type)
+        {
+            for (var i = 0; i < slots.Length; i++)
+            {
+                if (!slots[i].IsEmpty && slots[i].Type == type)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

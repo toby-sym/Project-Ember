@@ -20,6 +20,11 @@ namespace ProjectEmber.World
         public WorldRegistry Registry => registry;
         public WorldGenerator Generator => generator;
 
+        public bool TryGetLoadedChunk(Vector2Int chunkCoordinates, out GameObject chunkObject)
+        {
+            return chunkObjects.TryGetValue(chunkCoordinates, out chunkObject);
+        }
+
         public void Initialize(Transform playerTransform, int worldSeed, int radius)
         {
             player = playerTransform;
@@ -125,9 +130,40 @@ namespace ProjectEmber.World
                     {
                         var tree = ProceduralTreeFactory.CreateTree($"Tree {tile.OccupantId}", tile.OccupantId, parent);
                         tree.transform.localPosition = new Vector3(x, y, 0f);
+                        var harvestable = tree.AddComponent<HarvestableTree>();
+                        harvestable.Initialize(this, coords, new Vector2Int(x, y), tile.OccupantId, tile.Durability);
                     }
                 }
             }
+        }
+
+        public void HarvestTree(Vector2Int chunkCoordinates, Vector2Int localTile, int newDurability, int occupantId)
+        {
+            if (!registry.TryGetChunk(chunkCoordinates, out var chunk))
+            {
+                return;
+            }
+
+            var tile = chunk.GetTile(localTile.x, localTile.y);
+            tile.Durability = Mathf.Max(0, newDurability);
+            tile.OccupantId = occupantId;
+            chunk.SetTile(localTile.x, localTile.y, tile);
+            registry.RecordTileDelta(chunkCoordinates, WorldChunk.ToIndex(localTile.x, localTile.y), tile);
+
+            if (chunkObjects.TryGetValue(chunkCoordinates, out var chunkObject))
+            {
+                RebuildChunkVisuals(chunk, chunkObject.transform);
+            }
+        }
+
+        private void RebuildChunkVisuals(WorldChunk chunk, Transform parent)
+        {
+            for (var i = parent.childCount - 1; i >= 0; i--)
+            {
+                Destroy(parent.GetChild(i).gameObject);
+            }
+
+            PopulateChunkVisuals(chunk, parent);
         }
 
         private static void CreateGroundPatch(WorldChunk chunk, Transform parent, int x, int y)

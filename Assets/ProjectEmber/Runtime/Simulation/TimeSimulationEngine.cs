@@ -18,6 +18,11 @@ namespace ProjectEmber.Simulation
         public int Season { get; private set; }
         public float NormalizedDayTime => (Hour * 60f + Minute) / 1440f;
 
+        private void Awake()
+        {
+            EnsureAmbientGradient();
+        }
+
         private void Update()
         {
             accumulator += Time.deltaTime;
@@ -54,6 +59,16 @@ namespace ProjectEmber.Simulation
 
         private void Reset()
         {
+            EnsureAmbientGradient();
+        }
+
+        private void EnsureAmbientGradient()
+        {
+            if (ambientGradient != null)
+            {
+                return;
+            }
+
             ambientGradient = new Gradient
             {
                 colorKeys = new[]

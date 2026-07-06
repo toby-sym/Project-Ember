@@ -25,6 +25,11 @@ namespace ProjectEmber.World
             tiles[ToIndex(x, y)] = tile;
         }
 
+        public TileData[] GetTiles()
+        {
+            return tiles;
+        }
+
         public static int ToIndex(int x, int y)
         {
             return y * Size + x;

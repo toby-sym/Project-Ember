@@ -46,6 +46,7 @@ namespace ProjectEmber.Bootstrap
         private GameObject SetupPlayer()
         {
             var player = GameObject.Find("Player") ?? new GameObject("Player");
+            player.tag = "Player";
             player.transform.position = Vector3.zero;
 
             var character = player.GetComponent<ProceduralCharacter>() ?? player.AddComponent<ProceduralCharacter>();
@@ -78,7 +79,11 @@ namespace ProjectEmber.Bootstrap
                 var cameraObject = new GameObject("Main Camera");
                 cameraObject.tag = "MainCamera";
                 camera = cameraObject.AddComponent<Camera>();
-                cameraObject.AddComponent<AudioListener>();
+            }
+
+            if (camera.GetComponent<AudioListener>() == null)
+            {
+                camera.gameObject.AddComponent<AudioListener>();
             }
 
             camera.orthographic = true;

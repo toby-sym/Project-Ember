@@ -1,4 +1,5 @@
 using ProjectEmber.Shared;
+using ProjectEmber.World;
 using UnityEngine;
 
 namespace ProjectEmber.Gameplay
@@ -22,7 +23,12 @@ namespace ProjectEmber.Gameplay
 
         private void Update()
         {
-            if (!Input.GetMouseButtonDown(0) || worldCamera == null)
+            if (!Input.GetMouseButtonDown(0) || worldCamera == null || inventory == null)
+            {
+                return;
+            }
+
+            if (!inventory.HasItem(ItemType.Axe))
             {
                 return;
             }
@@ -34,14 +40,25 @@ namespace ProjectEmber.Gameplay
                 return;
             }
 
-            var hit = Physics2D.OverlapCircle(mouse, 0.35f);
-            if (hit == null || !hit.name.Contains("Tree"))
+            var direction = mouse - transform.position;
+            if (direction.sqrMagnitude <= Mathf.Epsilon)
             {
                 return;
             }
 
-            Destroy(hit.gameObject);
-            inventory?.TryAddItem(ItemType.Logs, 2);
+            var hit = Physics2D.Raycast(transform.position, direction.normalized, range);
+            if (hit.collider == null)
+            {
+                return;
+            }
+
+            var tree = hit.collider.GetComponentInParent<HarvestableTree>();
+            if (tree == null)
+            {
+                return;
+            }
+
+            tree.TryDamage(1, inventory);
         }
     }
 }

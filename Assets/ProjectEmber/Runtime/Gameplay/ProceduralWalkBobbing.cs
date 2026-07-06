@@ -13,6 +13,14 @@ namespace ProjectEmber.Gameplay
         private Transform rightArm;
         private Transform leftLeg;
         private Transform rightLeg;
+        private Vector3 leftArmBasePosition;
+        private Vector3 rightArmBasePosition;
+        private Vector3 leftLegBasePosition;
+        private Vector3 rightLegBasePosition;
+        private Quaternion leftArmBaseRotation;
+        private Quaternion rightArmBaseRotation;
+        private Quaternion leftLegBaseRotation;
+        private Quaternion rightLegBaseRotation;
         private float phase;
 
         private void Awake()
@@ -34,10 +42,45 @@ namespace ProjectEmber.Gameplay
 
         private void CacheParts()
         {
-            leftArm ??= transform.Find("LeftArm");
-            rightArm ??= transform.Find("RightArm");
-            leftLeg ??= transform.Find("LeftLeg");
-            rightLeg ??= transform.Find("RightLeg");
+            if (leftArm == null)
+            {
+                leftArm = transform.Find("LeftArm");
+                if (leftArm != null)
+                {
+                    leftArmBasePosition = leftArm.localPosition;
+                    leftArmBaseRotation = leftArm.localRotation;
+                }
+            }
+
+            if (rightArm == null)
+            {
+                rightArm = transform.Find("RightArm");
+                if (rightArm != null)
+                {
+                    rightArmBasePosition = rightArm.localPosition;
+                    rightArmBaseRotation = rightArm.localRotation;
+                }
+            }
+
+            if (leftLeg == null)
+            {
+                leftLeg = transform.Find("LeftLeg");
+                if (leftLeg != null)
+                {
+                    leftLegBasePosition = leftLeg.localPosition;
+                    leftLegBaseRotation = leftLeg.localRotation;
+                }
+            }
+
+            if (rightLeg == null)
+            {
+                rightLeg = transform.Find("RightLeg");
+                if (rightLeg != null)
+                {
+                    rightLegBasePosition = rightLeg.localPosition;
+                    rightLegBaseRotation = rightLeg.localRotation;
+                }
+            }
         }
 
         private void ApplyPart(Transform part, float direction)
@@ -48,10 +91,32 @@ namespace ProjectEmber.Gameplay
             }
 
             var wave = Mathf.Sin(phase) * direction;
-            var local = part.localPosition;
-            local.y += wave * bobAmplitude * Time.deltaTime;
-            part.localPosition = local;
-            part.localRotation = Quaternion.Euler(0f, 0f, wave * rotationAmplitude);
+            if (part == leftArm)
+            {
+                part.localPosition = leftArmBasePosition + new Vector3(0f, wave * bobAmplitude, 0f);
+                part.localRotation = leftArmBaseRotation * Quaternion.Euler(0f, 0f, wave * rotationAmplitude);
+                return;
+            }
+
+            if (part == rightArm)
+            {
+                part.localPosition = rightArmBasePosition + new Vector3(0f, wave * bobAmplitude, 0f);
+                part.localRotation = rightArmBaseRotation * Quaternion.Euler(0f, 0f, wave * rotationAmplitude);
+                return;
+            }
+
+            if (part == leftLeg)
+            {
+                part.localPosition = leftLegBasePosition + new Vector3(0f, wave * bobAmplitude, 0f);
+                part.localRotation = leftLegBaseRotation * Quaternion.Euler(0f, 0f, wave * rotationAmplitude);
+                return;
+            }
+
+            if (part == rightLeg)
+            {
+                part.localPosition = rightLegBasePosition + new Vector3(0f, wave * bobAmplitude, 0f);
+                part.localRotation = rightLegBaseRotation * Quaternion.Euler(0f, 0f, wave * rotationAmplitude);
+            }
         }
     }
 }

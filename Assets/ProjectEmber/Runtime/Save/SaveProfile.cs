@@ -1,5 +1,6 @@
 using System;
 using ProjectEmber.Gameplay;
+using ProjectEmber.World;
 using UnityEngine;
 
 namespace ProjectEmber.Save
@@ -13,5 +14,22 @@ namespace ProjectEmber.Save
         public int Day;
         public int Season;
         public InventorySlot[] InventorySlots;
+        public SaveChunkDelta[] ChunkDeltas;
+    }
+
+    [Serializable]
+    public sealed class SaveChunkDelta
+    {
+        public Vector2Int ChunkCoordinates;
+        public SaveTileDelta[] Tiles;
+    }
+
+    [Serializable]
+    public sealed class SaveTileDelta
+    {
+        public int TileIndex;
+        public TileType BaseType;
+        public int Durability;
+        public int OccupantId;
     }
 }
