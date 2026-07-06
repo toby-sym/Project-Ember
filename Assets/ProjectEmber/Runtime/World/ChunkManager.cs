@@ -131,7 +131,7 @@ namespace ProjectEmber.World
                         var tree = ProceduralTreeFactory.CreateTree($"Tree {tile.OccupantId}", tile.OccupantId, parent);
                         tree.transform.localPosition = new Vector3(x, y, 0f);
                         var harvestable = tree.AddComponent<HarvestableTree>();
-                        harvestable.Initialize(this, coords, new Vector2Int(x, y), tile.OccupantId, tile.Durability);
+                        harvestable.Initialize(this, chunk.Coordinates, new Vector2Int(x, y), tile.OccupantId, tile.Durability);
                     }
                 }
             }
