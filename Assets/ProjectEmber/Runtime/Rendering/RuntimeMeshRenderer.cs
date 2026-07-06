@@ -80,6 +80,8 @@ namespace ProjectEmber.Rendering
             runtimeMesh.SetTriangles(triangles, 0);
             runtimeMesh.RecalculateBounds();
             runtimeMesh.RecalculateNormals();
+            
+            Debug.Log($"Built mesh with {vertices.Count} vertices and {triangles.Count} triangles on {gameObject.name}");
         }
 
         private void EnsureComponents()

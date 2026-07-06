@@ -9,7 +9,8 @@
     "ProjectEmber.Gameplay",
     "ProjectEmber.UI",
     "ProjectEmber.Simulation",
-    "ProjectEmber.Save"
+    "ProjectEmber.Save",
+    "Unity.RenderPipelines.Universal.Runtime"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

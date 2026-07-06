@@ -6,6 +6,7 @@ using ProjectEmber.UI;
 using ProjectEmber.World;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 namespace ProjectEmber.Bootstrap
@@ -41,6 +42,8 @@ namespace ProjectEmber.Bootstrap
             SetupCamera(player.transform);
             SetupUi();
             SetupSimulation();
+            
+            Debug.Log($"Bootstrap complete. Player at {player.transform.position}, Camera at {Camera.main.transform.position}");
         }
 
         private GameObject SetupPlayer()
@@ -91,6 +94,12 @@ namespace ProjectEmber.Bootstrap
             camera.transform.position = new Vector3(0f, 0f, -10f);
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(0.1f, 0.12f, 0.12f, 1f);
+            
+            if (camera.GetComponent<UniversalAdditionalCameraData>() == null)
+            {
+                camera.gameObject.AddComponent<UniversalAdditionalCameraData>();
+            }
+            
             var follow = camera.GetComponent<CameraFollow2D>() ?? camera.gameObject.AddComponent<CameraFollow2D>();
             follow.SetTarget(player);
         }
