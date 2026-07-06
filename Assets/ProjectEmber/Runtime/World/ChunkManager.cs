@@ -192,13 +192,15 @@ namespace ProjectEmber.World
             // Generate and apply pixel art tile texture
             var baseColor = ColorForTile(tile.BaseType);
             var tileTexture = ProceduralPixelArtGenerator.GenerateTileTexture(baseColor, seed, 32);
-            if (patch.GetComponent<MeshRenderer>() != null)
+            
+            var renderer = patch.GetComponent<MeshRenderer>();
+            if (renderer != null && tileTexture != null)
             {
-                patch.GetComponent<MeshRenderer>().material.mainTexture = tileTexture;
-                patch.GetComponent<MeshRenderer>().sortingOrder = -100;
+                renderer.material.mainTexture = tileTexture;
+                renderer.sortingOrder = -100;
             }
 
-            Destroy(data);
+            DisposeTemporaryData(data);
         }
 
         public void HarvestTree(Vector2Int chunkCoordinates, Vector2Int localTile, int newDurability, int occupantId)
@@ -246,6 +248,18 @@ namespace ProjectEmber.World
             return new Vector2Int(
                 Mathf.FloorToInt(worldPosition.x / WorldChunk.Size),
                 Mathf.FloorToInt(worldPosition.y / WorldChunk.Size));
+        }
+
+        private static void DisposeTemporaryData(VectorSpriteData data)
+        {
+            if (Application.isPlaying)
+            {
+                Object.Destroy(data);
+            }
+            else
+            {
+                Object.DestroyImmediate(data);
+            }
         }
     }
 }

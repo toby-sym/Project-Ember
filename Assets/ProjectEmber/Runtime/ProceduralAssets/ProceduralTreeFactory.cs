@@ -70,9 +70,11 @@ namespace ProjectEmber.ProceduralAssets
 
             // Generate and apply pixel art texture
             var treeTexture = ProceduralPixelArtGenerator.GenerateTreeTexture(barkColor, leafColors, seed, 32);
-            if (tree.GetComponent<MeshRenderer>() != null)
+            
+            var renderer = tree.GetComponent<MeshRenderer>();
+            if (renderer != null && treeTexture != null)
             {
-                tree.GetComponent<MeshRenderer>().material.mainTexture = treeTexture;
+                renderer.material.mainTexture = treeTexture;
             }
 
             DisposeTemporaryData(data);

@@ -82,9 +82,10 @@ namespace ProjectEmber.ProceduralAssets
             meshRenderer.BuildMeshFromVectorData(data, seed);
             
             // Apply the generated texture to the material
-            if (meshRenderer.GetComponent<MeshRenderer>() != null && characterTexture != null)
+            var renderer = meshRenderer.GetComponent<MeshRenderer>();
+            if (renderer != null && characterTexture != null)
             {
-                meshRenderer.GetComponent<MeshRenderer>().material.mainTexture = characterTexture;
+                renderer.material.mainTexture = characterTexture;
             }
             
             DisposeTemporaryData(data);
