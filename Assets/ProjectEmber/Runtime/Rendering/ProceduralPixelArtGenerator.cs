@@ -1,4 +1,5 @@
 using System;
+using ProjectEmber.World;
 using UnityEngine;
 
 namespace ProjectEmber.Rendering
