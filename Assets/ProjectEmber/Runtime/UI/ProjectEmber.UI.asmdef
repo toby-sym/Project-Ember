@@ -1,0 +1,19 @@
+{
+  "name": "ProjectEmber.UI",
+  "rootNamespace": "ProjectEmber.UI",
+  "references": [
+    "ProjectEmber.Shared",
+    "ProjectEmber.Gameplay",
+    "ProjectEmber.Rendering",
+    "ProjectEmber.ProceduralAssets"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

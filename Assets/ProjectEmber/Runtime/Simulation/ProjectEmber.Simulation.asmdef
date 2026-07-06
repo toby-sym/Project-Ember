@@ -1,0 +1,17 @@
+{
+  "name": "ProjectEmber.Simulation",
+  "rootNamespace": "ProjectEmber.Simulation",
+  "references": [
+    "ProjectEmber.Shared",
+    "ProjectEmber.World"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

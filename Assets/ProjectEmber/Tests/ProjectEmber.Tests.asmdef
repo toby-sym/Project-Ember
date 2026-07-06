@@ -1,0 +1,26 @@
+{
+  "name": "ProjectEmber.Tests",
+  "rootNamespace": "ProjectEmber.Tests",
+  "references": [
+    "ProjectEmber.Shared",
+    "ProjectEmber.Rendering",
+    "ProjectEmber.ProceduralAssets",
+    "ProjectEmber.World",
+    "ProjectEmber.Gameplay",
+    "ProjectEmber.UI",
+    "ProjectEmber.Simulation",
+    "ProjectEmber.Save"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}

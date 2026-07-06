@@ -1,0 +1,19 @@
+{
+  "name": "ProjectEmber.Save",
+  "rootNamespace": "ProjectEmber.Save",
+  "references": [
+    "ProjectEmber.Shared",
+    "ProjectEmber.World",
+    "ProjectEmber.Gameplay",
+    "ProjectEmber.Simulation"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

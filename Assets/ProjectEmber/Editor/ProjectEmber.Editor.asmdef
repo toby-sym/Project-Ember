@@ -1,0 +1,25 @@
+{
+  "name": "ProjectEmber.Editor",
+  "rootNamespace": "ProjectEmber.Editor",
+  "references": [
+    "ProjectEmber.Shared",
+    "ProjectEmber.Rendering",
+    "ProjectEmber.ProceduralAssets",
+    "ProjectEmber.World",
+    "ProjectEmber.Gameplay",
+    "ProjectEmber.UI",
+    "ProjectEmber.Simulation",
+    "ProjectEmber.Save"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
