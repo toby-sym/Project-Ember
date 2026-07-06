@@ -190,7 +190,8 @@ namespace ProjectEmber.World
             meshRenderer.BuildMeshFromVectorData(data, seed);
 
             // Generate and apply pixel art tile texture
-            var tileTexture = ProceduralPixelArtGenerator.GenerateTileTexture(tile.BaseType, seed, 32);
+            var baseColor = ColorForTile(tile.BaseType);
+            var tileTexture = ProceduralPixelArtGenerator.GenerateTileTexture(baseColor, seed, 32);
             if (patch.GetComponent<MeshRenderer>() != null)
             {
                 patch.GetComponent<MeshRenderer>().material.mainTexture = tileTexture;
@@ -198,17 +199,6 @@ namespace ProjectEmber.World
             }
 
             Destroy(data);
-        }
-
-        private static string GetTileSpriteName(TileType type, System.Random random)
-        {
-            return type switch
-            {
-                TileType.Water => $"Water_{random.Next(1, 4)}",
-                TileType.DeepStone => $"Stone_{random.Next(1, 3)}",
-                TileType.Dirt => $"Dirt_{random.Next(1, 4)}",
-                _ => $"Grass_{random.Next(1, 6)}"
-            };
         }
 
         public void HarvestTree(Vector2Int chunkCoordinates, Vector2Int localTile, int newDurability, int occupantId)

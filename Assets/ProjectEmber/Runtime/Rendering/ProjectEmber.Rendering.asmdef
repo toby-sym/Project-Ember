@@ -2,8 +2,7 @@
   "name": "ProjectEmber.Rendering",
   "rootNamespace": "ProjectEmber.Rendering",
   "references": [
-    "ProjectEmber.Shared",
-    "ProjectEmber.World"
+    "ProjectEmber.Shared"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

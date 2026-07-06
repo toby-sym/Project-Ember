@@ -1,5 +1,4 @@
 using System;
-using ProjectEmber.World;
 using UnityEngine;
 
 namespace ProjectEmber.Rendering
@@ -77,7 +76,7 @@ namespace ProjectEmber.Rendering
             return texture;
         }
         
-        public static Texture2D GenerateTileTexture(TileType tileType, int seed, int resolution = DefaultResolution)
+        public static Texture2D GenerateTileTexture(Color baseColor, int seed, int resolution = DefaultResolution)
         {
             var texture = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false)
             {
@@ -87,9 +86,8 @@ namespace ProjectEmber.Rendering
             
             var colors = new Color[resolution * resolution];
             var random = new System.Random(seed);
-            var baseColor = GetTileColor(tileType);
             
-            DrawPixelTile(colors, resolution, baseColor, tileType, random);
+            DrawPixelTile(colors, resolution, baseColor, random);
             
             texture.SetPixels(colors);
             texture.Apply();
@@ -181,7 +179,7 @@ namespace ProjectEmber.Rendering
             AddPixelNoise(colors, resolution, random, 0.08f);
         }
         
-        private static void DrawPixelTile(Color[] colors, int resolution, Color baseColor, TileType type, System.Random random)
+        private static void DrawPixelTile(Color[] colors, int resolution, Color baseColor, System.Random random)
         {
             // Fill with base color
             for (var i = 0; i < colors.Length; i++)
@@ -189,21 +187,26 @@ namespace ProjectEmber.Rendering
                 colors[i] = ApplyDithering(baseColor, i % resolution, i / resolution, resolution);
             }
             
-            // Add detail based on tile type
-            switch (type)
+            // Add generic detail based on color
+            if (baseColor.g > 0.3f && baseColor.g > baseColor.r)
             {
-                case TileType.Grass:
-                    DrawPixelGrassDetails(colors, resolution, baseColor, random);
-                    break;
-                case TileType.Dirt:
-                    DrawPixelDirtDetails(colors, resolution, baseColor, random);
-                    break;
-                case TileType.Water:
-                    DrawPixelWaterDetails(colors, resolution, baseColor, random);
-                    break;
-                case TileType.DeepStone:
-                    DrawPixelStoneDetails(colors, resolution, baseColor, random);
-                    break;
+                // Greenish - grass details
+                DrawPixelGrassDetails(colors, resolution, baseColor, random);
+            }
+            else if (baseColor.r > 0.3f && baseColor.r > baseColor.g)
+            {
+                // Reddish/brown - dirt details
+                DrawPixelDirtDetails(colors, resolution, baseColor, random);
+            }
+            else if (baseColor.b > 0.3f && baseColor.b > baseColor.r)
+            {
+                // Blueish - water details
+                DrawPixelWaterDetails(colors, resolution, baseColor, random);
+            }
+            else
+            {
+                // Grayish - stone details
+                DrawPixelStoneDetails(colors, resolution, baseColor, random);
             }
             
             AddPixelNoise(colors, resolution, random, 0.1f);
@@ -328,7 +331,7 @@ namespace ProjectEmber.Rendering
                         if (px >= 0 && px < resolution && py >= 0 && py < resolution)
                         {
                             // Add some variation
-                            var variation = (random.NextDouble() - 0.5f) * 0.1f;
+                            var variation = (float)(random.NextDouble() - 0.5) * 0.1f;
                             colors[py * resolution + px] = new Color(
                                 Mathf.Clamp01(color.r + variation),
                                 Mathf.Clamp01(color.g + variation),
@@ -411,17 +414,6 @@ namespace ProjectEmber.Rendering
             }
             
             return new Vector4(minX, minY, maxX, maxY);
-        }
-        
-        private static Color GetTileColor(TileType type)
-        {
-            return type switch
-            {
-                TileType.Water => new Color(0.12f, 0.34f, 0.58f),
-                TileType.DeepStone => new Color(0.25f, 0.25f, 0.28f),
-                TileType.Dirt => new Color(0.34f, 0.22f, 0.12f),
-                _ => new Color(0.24f, 0.42f, 0.18f)
-            };
         }
     }
 }
