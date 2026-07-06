@@ -51,16 +51,15 @@ namespace ProjectEmber.Bootstrap
             var character = player.GetComponent<ProceduralCharacter>() ?? player.AddComponent<ProceduralCharacter>();
             character.RandomizeAppearance(WorldSeed);
 
-            var body = player.GetComponent<Rigidbody2D>() ?? player.AddComponent<Rigidbody2D>();
-            body.gravityScale = 0f;
-            body.freezeRotation = true;
+            if (player.GetComponent<Rigidbody2D>() == null)
+            {
+                player.AddComponent<Rigidbody2D>();
+            }
+
             var movement = player.GetComponent<PlayerTopDownController>() ?? player.AddComponent<PlayerTopDownController>();
             var bobbing = player.GetComponent<ProceduralWalkBobbing>() ?? player.AddComponent<ProceduralWalkBobbing>();
             var gather = player.GetComponent<ToolGatheringController>() ?? player.AddComponent<ToolGatheringController>();
             gather.Initialize(inventory);
-
-            var collider = player.GetComponent<CircleCollider2D>() ?? player.AddComponent<CircleCollider2D>();
-            collider.radius = 0.45f;
             return player;
         }
 
