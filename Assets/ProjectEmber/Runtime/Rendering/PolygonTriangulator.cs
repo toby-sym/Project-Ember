@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ProjectEmber.Rendering
 {
-    internal static class PolygonTriangulator
+    public static class PolygonTriangulator
     {
         public static List<int> Triangulate(IReadOnlyList<Vector2> points)
         {
