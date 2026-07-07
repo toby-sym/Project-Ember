@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -22,12 +23,18 @@ namespace ProjectEmber.Save
                 Day = time != null ? time.Day : 1,
                 Season = time != null ? time.Season : 0,
                 InventorySlots = inventory != null ? inventory.Slots : null,
-                ChunkDeltas = registry != null ? CaptureChunkDeltas(registry) : System.Array.Empty<SaveChunkDelta>()
+                ChunkDeltas = registry != null ? CaptureChunkDeltas(registry) : Array.Empty<SaveChunkDelta>()
             };
         }
 
         public static SaveChunkDelta[] CaptureChunkDeltas(WorldRegistry registry)
         {
+            if (registry == null)
+            {
+                Debug.LogError("[SaveManager] CaptureChunkDeltas called with null registry.");
+                return Array.Empty<SaveChunkDelta>();
+            }
+
             var deltas = new System.Collections.Generic.List<SaveChunkDelta>();
             foreach (var pair in registry.TileDeltas)
             {
@@ -56,6 +63,12 @@ namespace ProjectEmber.Save
 
         public static string ToCompressedJson(SaveProfile profile)
         {
+            if (profile == null)
+            {
+                Debug.LogError("[SaveManager] ToCompressedJson called with null profile.");
+                return null;
+            }
+
             var json = JsonUtility.ToJson(profile);
             var bytes = Encoding.UTF8.GetBytes(json);
             using var output = new MemoryStream();
@@ -64,33 +77,123 @@ namespace ProjectEmber.Save
                 gzip.Write(bytes, 0, bytes.Length);
             }
 
-            return System.Convert.ToBase64String(output.ToArray());
+            return Convert.ToBase64String(output.ToArray());
         }
 
         public static SaveProfile FromCompressedJson(string payload)
         {
-            var bytes = System.Convert.FromBase64String(payload);
-            using var input = new MemoryStream(bytes);
-            using var gzip = new GZipStream(input, CompressionMode.Decompress);
-            using var output = new MemoryStream();
-            gzip.CopyTo(output);
-            return JsonUtility.FromJson<SaveProfile>(Encoding.UTF8.GetString(output.ToArray()));
+            if (string.IsNullOrEmpty(payload))
+            {
+                Debug.LogError("[SaveManager] FromCompressedJson called with null or empty payload.");
+                return null;
+            }
+
+            try
+            {
+                var bytes = Convert.FromBase64String(payload);
+                using var input = new MemoryStream(bytes);
+                using var gzip = new GZipStream(input, CompressionMode.Decompress);
+                using var output = new MemoryStream();
+                gzip.CopyTo(output);
+                var json = Encoding.UTF8.GetString(output.ToArray());
+                var profile = JsonUtility.FromJson<SaveProfile>(json);
+                if (profile == null)
+                {
+                    Debug.LogError("[SaveManager] Deserialized profile is null; save data may be corrupted.");
+                }
+                return profile;
+            }
+            catch (FormatException e)
+            {
+                Debug.LogError($"[SaveManager] Failed to decode Base64 payload: {e.Message}");
+                return null;
+            }
+            catch (InvalidDataException e)
+            {
+                Debug.LogError($"[SaveManager] Failed to decompress save data (corrupt or truncated): {e.Message}");
+                return null;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[SaveManager] Unexpected error deserializing save profile: {e.Message}");
+                return null;
+            }
         }
 
-        public static void WriteToDisk(string fileName, SaveProfile profile)
+        public static bool WriteToDisk(string fileName, SaveProfile profile)
         {
-            File.WriteAllText(ResolveSavePath(fileName), ToCompressedJson(profile));
+            if (profile == null)
+            {
+                Debug.LogError("[SaveManager] WriteToDisk called with null profile.");
+                return false;
+            }
+
+            string path;
+            try
+            {
+                path = ResolveSavePath(fileName);
+            }
+            catch (ArgumentException e)
+            {
+                Debug.LogError($"[SaveManager] Rejected invalid save file name: {e.Message}");
+                return false;
+            }
+
+            try
+            {
+                var compressed = ToCompressedJson(profile);
+                if (compressed == null)
+                {
+                    return false;
+                }
+                File.WriteAllText(path, compressed);
+                return true;
+            }
+            catch (IOException e)
+            {
+                Debug.LogError($"[SaveManager] Failed to write save file '{path}': {e.Message}");
+                return false;
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                Debug.LogError($"[SaveManager] Permission denied writing save file '{path}': {e.Message}");
+                return false;
+            }
         }
 
         public static SaveProfile ReadFromDisk(string fileName)
         {
-            var path = ResolveSavePath(fileName);
+            string path;
+            try
+            {
+                path = ResolveSavePath(fileName);
+            }
+            catch (ArgumentException e)
+            {
+                Debug.LogError($"[SaveManager] Rejected invalid save file name: {e.Message}");
+                return null;
+            }
+
             if (!File.Exists(path))
             {
                 return null;
             }
 
-            return FromCompressedJson(File.ReadAllText(path));
+            try
+            {
+                var contents = File.ReadAllText(path);
+                return FromCompressedJson(contents);
+            }
+            catch (IOException e)
+            {
+                Debug.LogError($"[SaveManager] Failed to read save file '{path}': {e.Message}");
+                return null;
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                Debug.LogError($"[SaveManager] Permission denied reading save file '{path}': {e.Message}");
+                return null;
+            }
         }
 
         public static string ResolveSavePath(string fileName)

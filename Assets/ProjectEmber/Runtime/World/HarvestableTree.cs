@@ -44,7 +44,16 @@ namespace ProjectEmber.World
         private void Harvest(IItemInventory inventory)
         {
             harvested = true;
-            chunkManager?.HarvestTree(chunkCoordinates, localTile, 0, 0);
+
+            if (chunkManager == null)
+            {
+                Debug.LogWarning($"[HarvestableTree] ChunkManager is null on '{gameObject.name}'; world state will not be updated.");
+            }
+            else
+            {
+                chunkManager.HarvestTree(chunkCoordinates, localTile, 0, 0);
+            }
+
             SpawnDrop(inventory);
             Destroy(gameObject);
         }

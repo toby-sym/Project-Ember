@@ -119,27 +119,12 @@ namespace ProjectEmber.Rendering
             var vertices = new List<Vector3>();
             var colors = new List<Color>();
             var triangles = new List<int>();
-            var sortedLayers = new List<VectorLayer>(data.Layers);
-            sortedLayers.Sort((left, right) => left.SortingOrderWithinSprite.CompareTo(right.SortingOrderWithinSprite));
 
-            foreach (var layer in sortedLayers)
+            foreach (var tessellated in VectorSpriteTessellator.Tessellate(data))
             {
-                if (layer == null || !layer.CloseLoop)
-                {
-                    continue;
-                }
-
-                var points = layer.GetRenderPoints();
-                if (points.Length < 3)
-                {
-                    continue;
-                }
-
-                var layerTriangles = PolygonTriangulator.Triangulate(points);
-                if (layerTriangles.Count == 0)
-                {
-                    continue;
-                }
+                var layer = tessellated.Layer;
+                var points = tessellated.Points;
+                var layerTriangles = tessellated.Triangles;
 
                 var vertexOffset = vertices.Count;
                 var z = layer.SortingOrderWithinSprite * -0.001f;
@@ -198,9 +183,16 @@ namespace ProjectEmber.Rendering
                 var shader = Shader.Find(PixelArtShaderName);
                 if (shader == null)
                 {
+                    Debug.LogWarning($"[RuntimeMeshRenderer] Shader '{PixelArtShaderName}' not found, falling back to 'Sprites/Default'.");
                     shader = Shader.Find("Sprites/Default");
                 }
-                
+
+                if (shader == null)
+                {
+                    Debug.LogError("[RuntimeMeshRenderer] No fallback shader available; material will not be created.");
+                    return;
+                }
+
                 cachedPixelArtMaterial = new Material(shader)
                 {
                     name = "Project Ember Pixel Art Material"
@@ -216,7 +208,19 @@ namespace ProjectEmber.Rendering
         {
             if (cachedVertexColorMaterial == null)
             {
-                var shader = Shader.Find(VertexColorShaderName) ?? Shader.Find("Sprites/Default");
+                var shader = Shader.Find(VertexColorShaderName);
+                if (shader == null)
+                {
+                    Debug.LogWarning($"[RuntimeMeshRenderer] Shader '{VertexColorShaderName}' not found, falling back to 'Sprites/Default'.");
+                    shader = Shader.Find("Sprites/Default");
+                }
+
+                if (shader == null)
+                {
+                    Debug.LogError("[RuntimeMeshRenderer] No fallback shader available; material will not be created.");
+                    return;
+                }
+
                 cachedVertexColorMaterial = new Material(shader)
                 {
                     name = "Project Ember Runtime Vertex Color Material"

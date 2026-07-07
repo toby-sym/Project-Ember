@@ -11,5 +11,17 @@ namespace ProjectEmber.Rendering
         [SerializeField] private List<VectorLayer> layers = new();
 
         public List<VectorLayer> Layers => layers;
+
+        public void DisposeTemporary()
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(this);
+            }
+            else
+            {
+                DestroyImmediate(this);
+            }
+        }
     }
 }

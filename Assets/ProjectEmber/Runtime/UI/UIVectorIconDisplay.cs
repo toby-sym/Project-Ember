@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ProjectEmber.ProceduralAssets;
 using ProjectEmber.Rendering;
 using ProjectEmber.Shared;
@@ -49,22 +48,12 @@ namespace ProjectEmber.UI
             var usableWidth = rect.width * (1f - padding * 2f);
             var usableHeight = rect.height * (1f - padding * 2f);
             var scale = Mathf.Min(usableWidth / boundsSize.x, usableHeight / boundsSize.y);
-            var sortedLayers = new List<VectorLayer>(vectorData.Layers);
-            sortedLayers.Sort((left, right) => left.SortingOrderWithinSprite.CompareTo(right.SortingOrderWithinSprite));
 
-            foreach (var layer in sortedLayers)
+            foreach (var tessellated in VectorSpriteTessellator.Tessellate(vectorData))
             {
-                if (layer == null || !layer.CloseLoop)
-                {
-                    continue;
-                }
-
-                var points = layer.GetRenderPoints();
-                var triangles = PolygonTriangulator.Triangulate(points);
-                if (points.Length < 3 || triangles.Count == 0)
-                {
-                    continue;
-                }
+                var layer = tessellated.Layer;
+                var points = tessellated.Points;
+                var triangles = tessellated.Triangles;
 
                 var vertexOffset = vertexHelper.currentVertCount;
                 for (var i = 0; i < points.Length; i++)
