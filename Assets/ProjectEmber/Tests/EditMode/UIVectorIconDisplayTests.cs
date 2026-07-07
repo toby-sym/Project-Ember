@@ -27,13 +27,14 @@ namespace ProjectEmber.Tests.EditMode
         }
 
         [Test]
-        public void SetIconAssignsGeneratedVectorData()
+        public void SetIconGeneratesPixelArtTexture()
         {
             display.SetIcon(ItemType.Axe);
 
             Assert.AreEqual(ItemType.Axe, display.ItemType);
-            Assert.NotNull(display.VectorData);
-            Assert.Greater(display.VectorData.Layers.Count, 0);
+            Assert.NotNull(display.IconTexture);
+            Assert.AreEqual(FilterMode.Point, display.IconTexture.filterMode);
+            Assert.AreSame(display.IconTexture, display.mainTexture);
         }
     }
 }

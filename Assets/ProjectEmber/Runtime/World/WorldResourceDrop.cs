@@ -25,8 +25,23 @@ namespace ProjectEmber.World
             inventory = targetInventory;
             startPosition = transform.position;
 
-            var renderer = gameObject.GetComponent<RuntimeMeshRenderer>() ?? gameObject.AddComponent<RuntimeMeshRenderer>();
-            renderer.BuildMeshFromVectorData(VectorItemIconFactory.CreateIcon(type));
+            var meshRenderer = gameObject.GetComponent<RuntimeMeshRenderer>() ?? gameObject.AddComponent<RuntimeMeshRenderer>();
+            meshRenderer.UsePixelArt = true;
+
+            var data = ScriptableObject.CreateInstance<VectorSpriteData>();
+            var quad = ProceduralShapeUtility.GenerateBoxPolygon(1f, 1f);
+            quad.Color = Color.white;
+            data.Layers.Add(quad);
+            meshRenderer.BuildMeshFromVectorData(data, (int)type);
+
+            var renderer = gameObject.GetComponent<MeshRenderer>();
+            var itemTexture = ProceduralPixelArtGenerator.GenerateItemTexture(type, (int)type);
+            if (renderer != null && itemTexture != null)
+            {
+                renderer.material.mainTexture = itemTexture;
+            }
+
+            data.DisposeTemporary();
         }
 
         private void Update()

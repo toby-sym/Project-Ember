@@ -1,4 +1,3 @@
-using ProjectEmber.ProceduralAssets;
 using ProjectEmber.Rendering;
 using ProjectEmber.Shared;
 using UnityEngine;
@@ -6,111 +5,93 @@ using UnityEngine.UI;
 
 namespace ProjectEmber.UI
 {
+    /// <summary>
+    /// Renders a procedurally generated pixel-art item icon into the Canvas by
+    /// drawing a textured quad, replacing the earlier vector-polygon tessellation.
+    /// </summary>
     public sealed class UIVectorIconDisplay : MaskableGraphic
     {
         [SerializeField] private ItemType itemType;
-        [SerializeField] private VectorSpriteData vectorData;
         [SerializeField, Range(0f, 0.45f)] private float padding = 0.12f;
 
+        private Texture2D iconTexture;
+
         public ItemType ItemType => itemType;
-        public VectorSpriteData VectorData => vectorData;
+        public Texture2D IconTexture => iconTexture;
+
+        public override Texture mainTexture => iconTexture != null ? iconTexture : base.mainTexture;
 
         public void SetIcon(ItemType type)
         {
             itemType = type;
-            vectorData = VectorItemIconFactory.CreateIcon(type);
-            SetVerticesDirty();
+            RegenerateTexture();
         }
 
-        public void SetVectorData(VectorSpriteData data)
+        protected override void OnEnable()
         {
-            vectorData = data;
+            base.OnEnable();
+            if (iconTexture == null)
+            {
+                RegenerateTexture();
+            }
+        }
+
+        private void RegenerateTexture()
+        {
+            DestroyTexture();
+            iconTexture = ProceduralPixelArtGenerator.GenerateItemTexture(itemType, itemType.GetHashCode());
+            SetMaterialDirty();
             SetVerticesDirty();
         }
 
         protected override void OnPopulateMesh(VertexHelper vertexHelper)
         {
             vertexHelper.Clear();
-            if (vectorData == null || vectorData.Layers.Count == 0)
-            {
-                return;
-            }
-
-            var bounds = CalculateBounds(vectorData);
-            var boundsSize = (Vector2)bounds.size;
-            var boundsCenter = (Vector2)bounds.center;
-            if (boundsSize.sqrMagnitude <= Mathf.Epsilon)
+            if (iconTexture == null)
             {
                 return;
             }
 
             var rect = GetPixelAdjustedRect();
-            var usableWidth = rect.width * (1f - padding * 2f);
-            var usableHeight = rect.height * (1f - padding * 2f);
-            var scale = Mathf.Min(usableWidth / boundsSize.x, usableHeight / boundsSize.y);
+            var inset = padding;
+            var xMin = rect.xMin + rect.width * inset;
+            var xMax = rect.xMax - rect.width * inset;
+            var yMin = rect.yMin + rect.height * inset;
+            var yMax = rect.yMax - rect.height * inset;
 
-            foreach (var tessellated in VectorSpriteTessellator.Tessellate(vectorData))
-            {
-                var layer = tessellated.Layer;
-                var points = tessellated.Points;
-                var triangles = tessellated.Triangles;
+            var tint = color;
+            vertexHelper.AddVert(new Vector3(xMin, yMin), tint, new Vector2(0f, 0f));
+            vertexHelper.AddVert(new Vector3(xMin, yMax), tint, new Vector2(0f, 1f));
+            vertexHelper.AddVert(new Vector3(xMax, yMax), tint, new Vector2(1f, 1f));
+            vertexHelper.AddVert(new Vector3(xMax, yMin), tint, new Vector2(1f, 0f));
 
-                var vertexOffset = vertexHelper.currentVertCount;
-                for (var i = 0; i < points.Length; i++)
-                {
-                    var local = (points[i] - boundsCenter) * scale;
-                    vertexHelper.AddVert(new UIVertex
-                    {
-                        position = new Vector3(local.x, local.y, 0f),
-                        color = layer.Color * color,
-                        uv0 = Vector2.zero
-                    });
-                }
-
-                for (var i = 0; i < triangles.Count; i += 3)
-                {
-                    vertexHelper.AddTriangle(vertexOffset + triangles[i], vertexOffset + triangles[i + 1], vertexOffset + triangles[i + 2]);
-                }
-            }
+            vertexHelper.AddTriangle(0, 1, 2);
+            vertexHelper.AddTriangle(2, 3, 0);
         }
 
-        private static Bounds CalculateBounds(VectorSpriteData data)
+        protected override void OnDestroy()
         {
-            var hasPoint = false;
-            var min = Vector2.zero;
-            var max = Vector2.zero;
+            base.OnDestroy();
+            DestroyTexture();
+        }
 
-            for (var layerIndex = 0; layerIndex < data.Layers.Count; layerIndex++)
+        private void DestroyTexture()
+        {
+            if (iconTexture == null)
             {
-                var layer = data.Layers[layerIndex];
-                if (layer == null)
-                {
-                    continue;
-                }
-
-                var points = layer.Points;
-                for (var pointIndex = 0; pointIndex < points.Length; pointIndex++)
-                {
-                    if (!hasPoint)
-                    {
-                        min = points[pointIndex];
-                        max = points[pointIndex];
-                        hasPoint = true;
-                        continue;
-                    }
-
-                    min = Vector2.Min(min, points[pointIndex]);
-                    max = Vector2.Max(max, points[pointIndex]);
-                }
+                return;
             }
 
-            var bounds = new Bounds();
-            if (hasPoint)
+            if (Application.isPlaying)
             {
-                bounds.SetMinMax(min, max);
+                Destroy(iconTexture);
+            }
+            else
+            {
+                DestroyImmediate(iconTexture);
             }
 
-            return bounds;
+            iconTexture = null;
         }
     }
 }

@@ -26,6 +26,19 @@ namespace ProjectEmber.World
 
             chunk = generator.GenerateChunk(chunkCoordinates);
             activeChunks.Add(chunkCoordinates, chunk);
+
+            // Re-apply any recorded deltas so harvested/loaded tiles survive chunk
+            // regeneration (e.g. after streaming out and back in, or a save load).
+            if (tileDeltas.TryGetValue(chunkCoordinates, out var chunkDeltas))
+            {
+                foreach (var delta in chunkDeltas)
+                {
+                    var localX = delta.Key % WorldChunk.Size;
+                    var localY = delta.Key / WorldChunk.Size;
+                    chunk.SetTile(localX, localY, delta.Value);
+                }
+            }
+
             return chunk;
         }
 

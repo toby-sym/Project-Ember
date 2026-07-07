@@ -27,6 +27,56 @@ namespace ProjectEmber.Save
             };
         }
 
+        public static void ApplyProfile(
+            SaveProfile profile,
+            Transform player,
+            TimeSimulationEngine time,
+            InventorySystem inventory,
+            ChunkManager chunkManager)
+        {
+            if (profile == null)
+            {
+                Debug.LogError("[SaveManager] ApplyProfile called with null profile.");
+                return;
+            }
+
+            if (player != null)
+            {
+                player.position = new Vector3(profile.PlayerPosition.x, profile.PlayerPosition.y, player.position.z);
+            }
+
+            if (time != null)
+            {
+                time.SetClock(profile.Minute, profile.Hour, profile.Day, profile.Season);
+            }
+
+            if (inventory != null)
+            {
+                inventory.RestoreSlots(profile.InventorySlots);
+            }
+
+            if (chunkManager != null && chunkManager.Registry != null && profile.ChunkDeltas != null)
+            {
+                foreach (var chunkDelta in profile.ChunkDeltas)
+                {
+                    if (chunkDelta?.Tiles == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var tile in chunkDelta.Tiles)
+                    {
+                        chunkManager.Registry.ApplyTileDelta(
+                            chunkDelta.ChunkCoordinates,
+                            tile.TileIndex,
+                            new TileData(tile.BaseType, tile.Durability, tile.OccupantId));
+                    }
+                }
+
+                chunkManager.RebuildLoadedChunkVisuals();
+            }
+        }
+
         public static SaveChunkDelta[] CaptureChunkDeltas(WorldRegistry registry)
         {
             if (registry == null)
