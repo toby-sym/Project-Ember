@@ -47,6 +47,16 @@ namespace ProjectEmber.Gameplay
             return false;
         }
 
+        public void RestoreSlots(InventorySlot[] savedSlots)
+        {
+            for (var i = 0; i < slots.Length; i++)
+            {
+                slots[i] = savedSlots != null && i < savedSlots.Length ? savedSlots[i] : default;
+            }
+
+            OnInventoryChanged?.Invoke();
+        }
+
         public bool RemoveItem(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= slots.Length || slots[slotIndex].IsEmpty)

@@ -4,7 +4,8 @@
   "references": [
     "ProjectEmber.Shared",
     "ProjectEmber.World",
-    "ProjectEmber.ProceduralAssets"
+    "ProjectEmber.ProceduralAssets",
+    "ProjectEmber.Simulation"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

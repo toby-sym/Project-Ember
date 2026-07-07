@@ -38,5 +38,20 @@ namespace ProjectEmber.Tests.EditMode
 
             Assert.AreEqual(expected, engine.NormalizedDayTime, 0.0001f);
         }
+
+        [Test]
+        public void SetClockRestoresAndClampsTimeState()
+        {
+            var raised = false;
+            engine.OnTimeChanged += () => raised = true;
+
+            engine.SetClock(75, 30, 0, 6);
+
+            Assert.AreEqual(59, engine.Minute);
+            Assert.AreEqual(23, engine.Hour);
+            Assert.AreEqual(1, engine.Day);
+            Assert.AreEqual(2, engine.Season);
+            Assert.IsTrue(raised);
+        }
     }
 }

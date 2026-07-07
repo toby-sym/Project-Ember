@@ -250,6 +250,44 @@ namespace ProjectEmber.World
             };
         }
 
+        public void RebuildLoadedChunkVisuals()
+        {
+            foreach (var pair in chunkObjects)
+            {
+                if (registry != null && registry.TryGetChunk(pair.Key, out var chunk))
+                {
+                    RebuildChunkVisuals(chunk, pair.Value.transform, pair.Key);
+                }
+            }
+        }
+
+        public bool IsWorldTileWalkable(Vector2Int worldTile)
+        {
+            if (registry == null || generator == null)
+            {
+                return false;
+            }
+
+            var chunkCoords = WorldTileToChunk(worldTile);
+            var chunk = registry.GetOrCreateChunk(chunkCoords, generator);
+            if (chunk == null)
+            {
+                return false;
+            }
+
+            var localX = worldTile.x - chunkCoords.x * WorldChunk.Size;
+            var localY = worldTile.y - chunkCoords.y * WorldChunk.Size;
+            var tile = chunk.GetTile(localX, localY);
+            return tile.BaseType == TileType.Grass || tile.BaseType == TileType.Dirt;
+        }
+
+        public static Vector2Int WorldTileToChunk(Vector2Int worldTile)
+        {
+            return new Vector2Int(
+                Mathf.FloorToInt(worldTile.x / (float)WorldChunk.Size),
+                Mathf.FloorToInt(worldTile.y / (float)WorldChunk.Size));
+        }
+
         public static Vector2Int WorldToChunk(Vector3 worldPosition)
         {
             return new Vector2Int(

@@ -3,7 +3,8 @@
   "rootNamespace": "ProjectEmber.Simulation",
   "references": [
     "ProjectEmber.Shared",
-    "ProjectEmber.World"
+    "ProjectEmber.World",
+    "Unity.RenderPipelines.Universal.Runtime"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

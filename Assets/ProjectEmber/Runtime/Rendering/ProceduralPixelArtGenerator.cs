@@ -1,4 +1,5 @@
 using System;
+using ProjectEmber.Shared;
 using UnityEngine;
 
 namespace ProjectEmber.Rendering
@@ -6,6 +7,16 @@ namespace ProjectEmber.Rendering
     public static class ProceduralPixelArtGenerator
     {
         private const int DefaultResolution = 64;
+        private const int DefaultItemResolution = 32;
+
+        private static readonly Color HandleWood = new(0.46f, 0.25f, 0.1f);
+        private static readonly Color HandleWoodDark = new(0.3f, 0.16f, 0.06f);
+        private static readonly Color Silver = new(0.78f, 0.81f, 0.84f);
+        private static readonly Color SilverDark = new(0.5f, 0.53f, 0.57f);
+        private static readonly Color LogBrown = new(0.55f, 0.34f, 0.16f);
+        private static readonly Color LogBrownDark = new(0.38f, 0.22f, 0.1f);
+        private static readonly Color BerryRed = new(0.78f, 0.08f, 0.12f);
+        private static readonly Color LeafGreen = new(0.2f, 0.5f, 0.2f);
         
         public static Texture2D GeneratePixelArtTexture(VectorLayer[] layers, int resolution = DefaultResolution)
         {
@@ -46,6 +57,107 @@ namespace ProjectEmber.Rendering
         {
             return BuildTexture(resolution, (colors, res) =>
                 DrawPixelTile(colors, res, baseColor, new System.Random(seed)));
+        }
+
+        public static Texture2D GenerateItemTexture(ItemType itemType, int seed, int resolution = DefaultItemResolution)
+        {
+            return BuildTexture(resolution, (colors, res) =>
+                DrawPixelItem(colors, res, itemType, new System.Random(seed)));
+        }
+
+        private static void DrawPixelItem(Color[] colors, int resolution, ItemType itemType, System.Random random)
+        {
+            switch (itemType)
+            {
+                case ItemType.Axe:
+                    DrawPixelAxe(colors, resolution);
+                    break;
+                case ItemType.Pickaxe:
+                    DrawPixelPickaxe(colors, resolution);
+                    break;
+                case ItemType.Sword:
+                    DrawPixelSword(colors, resolution);
+                    break;
+                case ItemType.Logs:
+                    DrawPixelLogs(colors, resolution);
+                    break;
+                case ItemType.Berries:
+                    DrawPixelBerries(colors, resolution);
+                    break;
+                default:
+                    DrawPixelLogs(colors, resolution);
+                    break;
+            }
+
+            AddPixelNoise(colors, resolution, random, 0.05f);
+        }
+
+        private static void DrawPixelAxe(Color[] colors, int resolution)
+        {
+            var unit = resolution / 32f;
+            // Brown handle running diagonally from bottom-left to upper area.
+            DrawPixelRect(colors, resolution, R(13, unit), R(4, unit), R(3, unit), R(20, unit), HandleWood);
+            DrawPixelRect(colors, resolution, R(13, unit), R(4, unit), R(1, unit), R(20, unit), HandleWoodDark);
+            // Silver wedge head at the top.
+            DrawPixelRect(colors, resolution, R(14, unit), R(22, unit), R(9, unit), R(6, unit), Silver);
+            DrawPixelRect(colors, resolution, R(18, unit), R(20, unit), R(6, unit), R(3, unit), Silver);
+            DrawPixelRect(colors, resolution, R(21, unit), R(22, unit), R(2, unit), R(6, unit), SilverDark);
+        }
+
+        private static void DrawPixelPickaxe(Color[] colors, int resolution)
+        {
+            var unit = resolution / 32f;
+            // Brown handle (vertical).
+            DrawPixelRect(colors, resolution, R(15, unit), R(3, unit), R(3, unit), R(22, unit), HandleWood);
+            DrawPixelRect(colors, resolution, R(15, unit), R(3, unit), R(1, unit), R(22, unit), HandleWoodDark);
+            // Silver curved head (bar tapering at both ends).
+            DrawPixelRect(colors, resolution, R(6, unit), R(23, unit), R(20, unit), R(3, unit), Silver);
+            DrawPixelRect(colors, resolution, R(4, unit), R(21, unit), R(4, unit), R(3, unit), SilverDark);
+            DrawPixelRect(colors, resolution, R(24, unit), R(21, unit), R(4, unit), R(3, unit), SilverDark);
+        }
+
+        private static void DrawPixelSword(Color[] colors, int resolution)
+        {
+            var unit = resolution / 32f;
+            // Silver blade (vertical).
+            DrawPixelRect(colors, resolution, R(14, unit), R(11, unit), R(4, unit), R(17, unit), Silver);
+            DrawPixelRect(colors, resolution, R(14, unit), R(11, unit), R(1, unit), R(17, unit), SilverDark);
+            // Blade tip.
+            DrawPixelRect(colors, resolution, R(15, unit), R(27, unit), R(2, unit), R(2, unit), Silver);
+            // Cross guard.
+            DrawPixelRect(colors, resolution, R(10, unit), R(9, unit), R(12, unit), R(2, unit), SilverDark);
+            // Wooden grip and pommel.
+            DrawPixelRect(colors, resolution, R(15, unit), R(3, unit), R(2, unit), R(6, unit), HandleWood);
+            DrawPixelRect(colors, resolution, R(14, unit), R(2, unit), R(4, unit), R(2, unit), HandleWoodDark);
+        }
+
+        private static void DrawPixelLogs(Color[] colors, int resolution)
+        {
+            var unit = resolution / 32f;
+            // Two stacked logs.
+            DrawPixelRect(colors, resolution, R(5, unit), R(6, unit), R(22, unit), R(8, unit), LogBrown);
+            DrawPixelRect(colors, resolution, R(8, unit), R(15, unit), R(22, unit), R(8, unit), LogBrownDark);
+            // End-grain rings.
+            DrawPixelCircle(colors, resolution, R(6, unit), R(10, unit), R(3, unit), LogBrownDark);
+            DrawPixelCircle(colors, resolution, R(6, unit), R(10, unit), R(1, unit), LogBrown);
+            DrawPixelCircle(colors, resolution, R(9, unit), R(19, unit), R(3, unit), LogBrown);
+            DrawPixelCircle(colors, resolution, R(9, unit), R(19, unit), R(1, unit), LogBrownDark);
+        }
+
+        private static void DrawPixelBerries(Color[] colors, int resolution)
+        {
+            var unit = resolution / 32f;
+            // Leaf.
+            DrawPixelRect(colors, resolution, R(15, unit), R(20, unit), R(6, unit), R(3, unit), LeafGreen);
+            // Cluster of berries.
+            DrawPixelCircle(colors, resolution, R(12, unit), R(14, unit), R(4, unit), BerryRed);
+            DrawPixelCircle(colors, resolution, R(20, unit), R(15, unit), R(4, unit), BerryRed);
+            DrawPixelCircle(colors, resolution, R(16, unit), R(9, unit), R(4, unit), BerryRed);
+        }
+
+        private static int R(int value, float unit)
+        {
+            return Mathf.RoundToInt(value * unit);
         }
 
         private static Texture2D BuildTexture(int resolution, Action<Color[], int> draw)

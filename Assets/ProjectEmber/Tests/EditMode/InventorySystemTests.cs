@@ -124,6 +124,24 @@ namespace ProjectEmber.Tests.EditMode
         }
 
         [Test]
+        public void RestoreSlotsOverwritesContentsAndClearsExtraSlots()
+        {
+            var inventory = new InventorySystem(3);
+            inventory.TryAddItem(ItemType.Axe, 1);
+
+            inventory.RestoreSlots(new[]
+            {
+                new InventorySlot(ItemType.Logs, 4),
+                new InventorySlot(ItemType.Berries, 2)
+            });
+
+            Assert.AreEqual(ItemType.Logs, inventory.Slots[0].Type);
+            Assert.AreEqual(4, inventory.Slots[0].Quantity);
+            Assert.AreEqual(ItemType.Berries, inventory.Slots[1].Type);
+            Assert.IsTrue(inventory.Slots[2].IsEmpty);
+        }
+
+        [Test]
         public void RejectedOperationsDoNotRaiseInventoryChangedEvent()
         {
             var inventory = new InventorySystem(1);

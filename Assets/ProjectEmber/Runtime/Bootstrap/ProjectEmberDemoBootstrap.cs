@@ -1,5 +1,6 @@
 using ProjectEmber.Gameplay;
 using ProjectEmber.ProceduralAssets;
+using ProjectEmber.Save;
 using ProjectEmber.Shared;
 using ProjectEmber.Simulation;
 using ProjectEmber.UI;
@@ -14,8 +15,14 @@ namespace ProjectEmber.Bootstrap
     public sealed class ProjectEmberDemoBootstrap : MonoBehaviour
     {
         private const int WorldSeed = 20260706;
+        private const int TownNpcCount = 3;
+        private const string SaveFileName = "project-ember-save.json";
+        private const KeyCode SaveHotkey = KeyCode.F5;
 
         private InventorySystem inventory;
+        private Transform playerTransform;
+        private ChunkManager chunkManager;
+        private TimeSimulationEngine simulation;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureDemoBootstrap()
@@ -40,12 +47,109 @@ namespace ProjectEmber.Bootstrap
             inventory.TryAddItem(ItemType.Berries, 5);
 
             var player = SetupPlayer();
-            SetupWorld(player.transform);
+            chunkManager = SetupWorld(player.transform);
             SetupCamera(player.transform);
             SetupUi();
-            SetupSimulation();
-            
+            simulation = SetupSimulation();
+            playerTransform = player.transform;
+
+            LoadSavedProfile(player.transform);
+            SpawnTownNpcs(player.transform);
+
             Debug.Log($"Bootstrap complete. Player at {player.transform.position}, Camera at {Camera.main.transform.position}");
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(SaveHotkey))
+            {
+                SaveGame();
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            SaveGame();
+        }
+
+        private void LoadSavedProfile(Transform player)
+        {
+            var profile = SaveManager.ReadFromDisk(SaveFileName);
+            if (profile == null)
+            {
+                return;
+            }
+
+            SaveManager.ApplyProfile(profile, player, simulation, inventory, chunkManager);
+            Debug.Log($"[Bootstrap] Loaded save: player {profile.PlayerPosition}, {profile.Hour:00}:{profile.Minute:00}, {profile.ChunkDeltas?.Length ?? 0} chunk delta(s).");
+        }
+
+        private void SaveGame()
+        {
+            if (playerTransform == null || chunkManager == null)
+            {
+                return;
+            }
+
+            var profile = SaveManager.CreateProfile(
+                playerTransform.position, inventory, simulation, chunkManager.Registry);
+            if (SaveManager.WriteToDisk(SaveFileName, profile))
+            {
+                Debug.Log("[Bootstrap] Game saved.");
+            }
+        }
+
+        private void SpawnTownNpcs(Transform player)
+        {
+            if (chunkManager == null)
+            {
+                return;
+            }
+
+            var origin = new Vector2Int(
+                Mathf.RoundToInt(player.position.x),
+                Mathf.RoundToInt(player.position.y));
+
+            for (var i = 0; i < TownNpcCount; i++)
+            {
+                var home = FindNearestWalkable(origin + new Vector2Int(-4 - i, 3 + i));
+                var market = FindNearestWalkable(origin + new Vector2Int(5 + i, -4 - i));
+
+                var npcObject = new GameObject($"Town NPC {i}");
+                npcObject.transform.position = new Vector3(home.x, home.y, 0f);
+                var npc = npcObject.AddComponent<TownNpc>();
+                npc.Initialize(chunkManager, simulation, home, market, WorldSeed + i * 7919);
+            }
+        }
+
+        private Vector2Int FindNearestWalkable(Vector2Int origin)
+        {
+            if (chunkManager.IsWorldTileWalkable(origin))
+            {
+                return origin;
+            }
+
+            for (var radius = 1; radius <= 12; radius++)
+            {
+                for (var dy = -radius; dy <= radius; dy++)
+                {
+                    for (var dx = -radius; dx <= radius; dx++)
+                    {
+                        if (Mathf.Abs(dx) != radius && Mathf.Abs(dy) != radius)
+                        {
+                            continue;
+                        }
+
+                        var candidate = origin + new Vector2Int(dx, dy);
+                        if (chunkManager.IsWorldTileWalkable(candidate))
+                        {
+                            return candidate;
+                        }
+                    }
+                }
+            }
+
+            return origin;
         }
 
         private GameObject SetupPlayer()
@@ -69,11 +173,12 @@ namespace ProjectEmber.Bootstrap
             return player;
         }
 
-        private static void SetupWorld(Transform player)
+        private static ChunkManager SetupWorld(Transform player)
         {
             var world = GameObject.Find("World") ?? new GameObject("World");
-            var chunkManager = world.GetComponent<ChunkManager>() ?? world.AddComponent<ChunkManager>();
-            chunkManager.Initialize(player, WorldSeed, 1);
+            var manager = world.GetComponent<ChunkManager>() ?? world.AddComponent<ChunkManager>();
+            manager.Initialize(player, WorldSeed, 1);
+            return manager;
         }
 
         private static void SetupCamera(Transform player)
@@ -176,10 +281,17 @@ namespace ProjectEmber.Bootstrap
             iconObject.AddComponent<UIVectorIconDisplay>().SetIcon(type);
         }
 
-        private static void SetupSimulation()
+        private static TimeSimulationEngine SetupSimulation()
         {
             var systems = GameObject.Find("Systems") ?? new GameObject("Systems");
-            var simulation = systems.GetComponent<TimeSimulationEngine>() ?? systems.AddComponent<TimeSimulationEngine>();
+            var engine = systems.GetComponent<TimeSimulationEngine>() ?? systems.AddComponent<TimeSimulationEngine>();
+
+            var lightObject = GameObject.Find("Global Light 2D") ?? new GameObject("Global Light 2D");
+            var globalLight = lightObject.GetComponent<Light2D>() ?? lightObject.AddComponent<Light2D>();
+            globalLight.lightType = Light2D.LightType.Global;
+            engine.GlobalLight = globalLight;
+
+            return engine;
         }
     }
 }
