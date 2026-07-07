@@ -18,6 +18,12 @@ namespace ProjectEmber.World
                 return chunk;
             }
 
+            if (generator == null)
+            {
+                Debug.LogError($"[WorldRegistry] Cannot generate chunk at {chunkCoordinates}: generator is null.");
+                return null;
+            }
+
             chunk = generator.GenerateChunk(chunkCoordinates);
             activeChunks.Add(chunkCoordinates, chunk);
             return chunk;

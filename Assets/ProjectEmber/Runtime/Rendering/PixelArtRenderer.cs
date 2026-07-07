@@ -49,12 +49,20 @@ namespace ProjectEmber.Rendering
         {
             if (characterData == null)
             {
+                Debug.LogWarning($"[PixelArtRenderer] Cannot play animation '{animationName}': no character data assigned on '{gameObject.name}'.");
                 return;
             }
 
             var animation = characterData.GetAnimation(animationName);
             if (animation == null)
             {
+                Debug.LogWarning($"[PixelArtRenderer] Animation '{animationName}' not found in character data on '{gameObject.name}'.");
+                return;
+            }
+
+            if (animation.Frames == null || animation.Frames.Count == 0)
+            {
+                Debug.LogWarning($"[PixelArtRenderer] Animation '{animationName}' has no frames on '{gameObject.name}'.");
                 return;
             }
 
@@ -78,9 +86,20 @@ namespace ProjectEmber.Rendering
                 return;
             }
 
+            if (currentAnimation.Frames == null || currentAnimation.Frames.Count == 0)
+            {
+                isPlaying = false;
+                return;
+            }
+
+            if (currentFrameIndex < 0 || currentFrameIndex >= currentAnimation.Frames.Count)
+            {
+                currentFrameIndex = 0;
+            }
+
             frameTimer += Time.deltaTime;
             var currentFrame = currentAnimation.Frames[currentFrameIndex];
-            
+
             if (frameTimer >= currentFrame.Duration)
             {
                 frameTimer = 0f;
