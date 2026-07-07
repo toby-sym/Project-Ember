@@ -1,4 +1,5 @@
 using ProjectEmber.Rendering;
+using ProjectEmber.Shared;
 using UnityEngine;
 
 namespace ProjectEmber.ProceduralAssets
@@ -57,12 +58,12 @@ namespace ProjectEmber.ProceduralAssets
         public void RandomizeAppearance(int seed)
         {
             var random = new System.Random(seed);
-            hairColor = RandomColor(random, 0.05f, 0.24f);
-            clothingColor = RandomColor(random, 0.18f, 0.72f);
+            hairColor = random.NextColor(0.05f, 0.24f);
+            clothingColor = random.NextColor(0.18f, 0.72f);
             skinTone = new Color(
-                RandomRange(random, 0.55f, 0.92f),
-                RandomRange(random, 0.36f, 0.68f),
-                RandomRange(random, 0.24f, 0.5f));
+                random.NextFloat(0.55f, 0.92f),
+                random.NextFloat(0.36f, 0.68f),
+                random.NextFloat(0.24f, 0.5f));
             
             Rebuild();
         }
@@ -88,7 +89,7 @@ namespace ProjectEmber.ProceduralAssets
                 renderer.material.mainTexture = characterTexture;
             }
             
-            DisposeTemporaryData(data);
+            data.DisposeTemporary();
         }
 
         private void BuildGeometricCharacter()
@@ -106,7 +107,7 @@ namespace ProjectEmber.ProceduralAssets
                 hairColor, 11));
             
             meshRenderer.BuildMeshFromVectorData(data);
-            DisposeTemporaryData(data);
+            data.DisposeTemporary();
         }
 
         private void Reset()
@@ -119,28 +120,6 @@ namespace ProjectEmber.ProceduralAssets
             if (characterTexture != null)
             {
                 Destroy(characterTexture);
-            }
-        }
-
-        private static Color RandomColor(System.Random random, float min, float max)
-        {
-            return new Color(RandomRange(random, min, max), RandomRange(random, min, max), RandomRange(random, min, max));
-        }
-
-        private static float RandomRange(System.Random random, float min, float max)
-        {
-            return min + (float)random.NextDouble() * (max - min);
-        }
-
-        private static void DisposeTemporaryData(VectorSpriteData data)
-        {
-            if (Application.isPlaying)
-            {
-                Destroy(data);
-            }
-            else
-            {
-                DestroyImmediate(data);
             }
         }
     }

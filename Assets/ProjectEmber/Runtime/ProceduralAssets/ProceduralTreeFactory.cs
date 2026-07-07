@@ -1,4 +1,5 @@
 using ProjectEmber.Rendering;
+using ProjectEmber.Shared;
 using UnityEngine;
 
 namespace ProjectEmber.ProceduralAssets
@@ -77,7 +78,7 @@ namespace ProjectEmber.ProceduralAssets
                 renderer.material.mainTexture = treeTexture;
             }
 
-            DisposeTemporaryData(data);
+            data.DisposeTemporary();
         }
 
         private static void CreateGeometricTree(GameObject tree, int seed)
@@ -86,7 +87,7 @@ namespace ProjectEmber.ProceduralAssets
             renderer.UsePixelArt = false;
             var data = CreateTreeSpriteData(seed);
             renderer.BuildMeshFromVectorData(data);
-            DisposeTemporaryData(data);
+            data.DisposeTemporary();
         }
 
         public static VectorSpriteData CreateTreeSpriteData(int seed)
@@ -99,9 +100,9 @@ namespace ProjectEmber.ProceduralAssets
             for (var i = 0; i < leafCount; i++)
             {
                 var center = new Vector2(
-                    RandomRange(random, -0.65f, 0.65f),
-                    RandomRange(random, 1.0f, 1.85f));
-                var radius = RandomRange(random, 0.42f, 0.74f);
+                    random.NextFloat(-0.65f, 0.65f),
+                    random.NextFloat(1.0f, 1.85f));
+                var radius = random.NextFloat(0.42f, 0.74f);
                 var layer = CreateOrganicBlob(center, radius, random.Next(9, 15), LeafPalette[random.Next(LeafPalette.Length)]);
                 layer.SortingOrderWithinSprite = 10 + i;
                 layer.ApplyVertexJitter = true;
@@ -115,10 +116,10 @@ namespace ProjectEmber.ProceduralAssets
 
         private static VectorLayer CreateTrunkLayer(System.Random random)
         {
-            var baseWidth = RandomRange(random, 0.32f, 0.48f);
-            var crownWidth = RandomRange(random, 0.18f, 0.3f);
-            var height = RandomRange(random, 1.35f, 1.75f);
-            var lean = RandomRange(random, -0.12f, 0.12f);
+            var baseWidth = random.NextFloat(0.32f, 0.48f);
+            var crownWidth = random.NextFloat(0.18f, 0.3f);
+            var height = random.NextFloat(1.35f, 1.75f);
+            var lean = random.NextFloat(-0.12f, 0.12f);
             var points = new[]
             {
                 new Vector2(-baseWidth, -0.9f),
@@ -147,23 +148,6 @@ namespace ProjectEmber.ProceduralAssets
             }
 
             return new VectorLayer(points, color);
-        }
-
-        private static float RandomRange(System.Random random, float min, float max)
-        {
-            return min + (float)random.NextDouble() * (max - min);
-        }
-
-        private static void DisposeTemporaryData(VectorSpriteData data)
-        {
-            if (Application.isPlaying)
-            {
-                Object.Destroy(data);
-            }
-            else
-            {
-                Object.DestroyImmediate(data);
-            }
         }
     }
 }

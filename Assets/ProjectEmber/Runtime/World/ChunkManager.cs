@@ -168,7 +168,7 @@ namespace ProjectEmber.World
             var data = ScriptableObject.CreateInstance<VectorSpriteData>();
             data.Layers.Add(layer);
             patch.AddComponent<RuntimeMeshRenderer>().BuildMeshFromVectorData(data);
-            Destroy(data);
+            data.DisposeTemporary();
         }
 
         private static void CreatePixelArtGroundPatch(WorldChunk chunk, Transform parent, int x, int y, System.Random random)
@@ -201,7 +201,7 @@ namespace ProjectEmber.World
                 renderer.sortingOrder = -100;
             }
 
-            DisposeTemporaryData(data);
+            data.DisposeTemporary();
         }
 
         public void HarvestTree(Vector2Int chunkCoordinates, Vector2Int localTile, int newDurability, int occupantId)
@@ -249,18 +249,6 @@ namespace ProjectEmber.World
             return new Vector2Int(
                 Mathf.FloorToInt(worldPosition.x / WorldChunk.Size),
                 Mathf.FloorToInt(worldPosition.y / WorldChunk.Size));
-        }
-
-        private static void DisposeTemporaryData(VectorSpriteData data)
-        {
-            if (Application.isPlaying)
-            {
-                Object.Destroy(data);
-            }
-            else
-            {
-                Object.DestroyImmediate(data);
-            }
         }
     }
 }

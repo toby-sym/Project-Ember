@@ -9,86 +9,56 @@ namespace ProjectEmber.Rendering
         
         public static Texture2D GeneratePixelArtTexture(VectorLayer[] layers, int resolution = DefaultResolution)
         {
-            var texture = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false)
+            return BuildTexture(resolution, (colors, res) =>
             {
-                filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Clamp
-            };
-            
-            var colors = new Color[resolution * resolution];
-            
-            for (var i = 0; i < layers.Length; i++)
-            {
-                var layer = layers[i];
-                if (layer == null || !layer.CloseLoop)
+                for (var i = 0; i < layers.Length; i++)
                 {
-                    continue;
+                    var layer = layers[i];
+                    if (layer == null || !layer.CloseLoop)
+                    {
+                        continue;
+                    }
+
+                    var points = layer.GetRenderPoints();
+                    if (points.Length < 3)
+                    {
+                        continue;
+                    }
+
+                    RasterizeLayer(points, layer.Color, colors, res, layer.SortingOrderWithinSprite);
                 }
-                
-                var points = layer.GetRenderPoints();
-                if (points.Length < 3)
-                {
-                    continue;
-                }
-                
-                RasterizeLayer(points, layer.Color, colors, resolution, layer.SortingOrderWithinSprite);
-            }
-            
-            texture.SetPixels(colors);
-            texture.Apply();
-            return texture;
+            });
         }
         
         public static Texture2D GenerateCharacterTexture(Color hairColor, Color clothingColor, Color skinTone, int seed, int resolution = DefaultResolution)
         {
-            var texture = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Clamp
-            };
-            
-            var colors = new Color[resolution * resolution];
-            var random = new System.Random(seed);
-            
-            // Generate pixel art character with dithering
-            DrawPixelCharacter(colors, resolution, hairColor, clothingColor, skinTone, random);
-            
-            texture.SetPixels(colors);
-            texture.Apply();
-            return texture;
+            return BuildTexture(resolution, (colors, res) =>
+                DrawPixelCharacter(colors, res, hairColor, clothingColor, skinTone, new System.Random(seed)));
         }
         
         public static Texture2D GenerateTreeTexture(Color barkColor, Color[] leafColors, int seed, int resolution = DefaultResolution)
         {
-            var texture = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Clamp
-            };
-            
-            var colors = new Color[resolution * resolution];
-            var random = new System.Random(seed);
-            
-            DrawPixelTree(colors, resolution, barkColor, leafColors, random);
-            
-            texture.SetPixels(colors);
-            texture.Apply();
-            return texture;
+            return BuildTexture(resolution, (colors, res) =>
+                DrawPixelTree(colors, res, barkColor, leafColors, new System.Random(seed)));
         }
         
         public static Texture2D GenerateTileTexture(Color baseColor, int seed, int resolution = DefaultResolution)
+        {
+            return BuildTexture(resolution, (colors, res) =>
+                DrawPixelTile(colors, res, baseColor, new System.Random(seed)));
+        }
+
+        private static Texture2D BuildTexture(int resolution, Action<Color[], int> draw)
         {
             var texture = new Texture2D(resolution, resolution, TextureFormat.RGBA32, false)
             {
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp
             };
-            
+
             var colors = new Color[resolution * resolution];
-            var random = new System.Random(seed);
-            
-            DrawPixelTile(colors, resolution, baseColor, random);
-            
+            draw(colors, resolution);
+
             texture.SetPixels(colors);
             texture.Apply();
             return texture;
