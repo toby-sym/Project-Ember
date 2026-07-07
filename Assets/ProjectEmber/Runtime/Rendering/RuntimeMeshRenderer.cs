@@ -198,9 +198,16 @@ namespace ProjectEmber.Rendering
                 var shader = Shader.Find(PixelArtShaderName);
                 if (shader == null)
                 {
+                    Debug.LogWarning($"[RuntimeMeshRenderer] Shader '{PixelArtShaderName}' not found, falling back to 'Sprites/Default'.");
                     shader = Shader.Find("Sprites/Default");
                 }
-                
+
+                if (shader == null)
+                {
+                    Debug.LogError("[RuntimeMeshRenderer] No fallback shader available; material will not be created.");
+                    return;
+                }
+
                 cachedPixelArtMaterial = new Material(shader)
                 {
                     name = "Project Ember Pixel Art Material"
@@ -216,7 +223,19 @@ namespace ProjectEmber.Rendering
         {
             if (cachedVertexColorMaterial == null)
             {
-                var shader = Shader.Find(VertexColorShaderName) ?? Shader.Find("Sprites/Default");
+                var shader = Shader.Find(VertexColorShaderName);
+                if (shader == null)
+                {
+                    Debug.LogWarning($"[RuntimeMeshRenderer] Shader '{VertexColorShaderName}' not found, falling back to 'Sprites/Default'.");
+                    shader = Shader.Find("Sprites/Default");
+                }
+
+                if (shader == null)
+                {
+                    Debug.LogError("[RuntimeMeshRenderer] No fallback shader available; material will not be created.");
+                    return;
+                }
+
                 cachedVertexColorMaterial = new Material(shader)
                 {
                     name = "Project Ember Runtime Vertex Color Material"

@@ -17,11 +17,23 @@ namespace ProjectEmber.World
 
         public TileData GetTile(int x, int y)
         {
+            if (!IsInBounds(x, y))
+            {
+                Debug.LogError($"[WorldChunk] GetTile out of bounds: ({x}, {y}) in chunk {Coordinates}.");
+                return default;
+            }
+
             return tiles[ToIndex(x, y)];
         }
 
         public void SetTile(int x, int y, TileData tile)
         {
+            if (!IsInBounds(x, y))
+            {
+                Debug.LogError($"[WorldChunk] SetTile out of bounds: ({x}, {y}) in chunk {Coordinates}.");
+                return;
+            }
+
             tiles[ToIndex(x, y)] = tile;
         }
 
@@ -33,6 +45,11 @@ namespace ProjectEmber.World
         public static int ToIndex(int x, int y)
         {
             return y * Size + x;
+        }
+
+        public static bool IsInBounds(int x, int y)
+        {
+            return x >= 0 && x < Size && y >= 0 && y < Size;
         }
     }
 }

@@ -106,6 +106,12 @@ namespace ProjectEmber.World
         private void CreateChunkObject(Vector2Int coords)
         {
             var chunk = registry.GetOrCreateChunk(coords, generator);
+            if (chunk == null)
+            {
+                Debug.LogError($"[ChunkManager] Failed to get or create chunk at {coords}; skipping.");
+                return;
+            }
+
             var chunkObject = pool.Count > 0 ? pool.Dequeue() : new GameObject("Chunk");
             chunkObject.name = $"Chunk {coords.x}, {coords.y}";
             chunkObject.transform.SetParent(transform, false);

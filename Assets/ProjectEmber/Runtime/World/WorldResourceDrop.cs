@@ -42,7 +42,18 @@ namespace ProjectEmber.World
 
             if (Vector3.Distance(player.transform.position, transform.position) <= pickupRadius)
             {
-                inventory?.TryAddItem(itemType, quantity);
+                if (inventory == null)
+                {
+                    Debug.LogWarning($"[WorldResourceDrop] No inventory assigned on '{gameObject.name}'; {quantity}x {itemType} lost on pickup.");
+                }
+                else
+                {
+                    if (!inventory.TryAddItem(itemType, quantity))
+                    {
+                        Debug.LogWarning($"[WorldResourceDrop] Failed to add {quantity}x {itemType} to inventory (full?). Item lost.");
+                    }
+                }
+
                 Destroy(gameObject);
             }
         }
