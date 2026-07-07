@@ -48,5 +48,30 @@ namespace ProjectEmber.Tests.EditMode
             Assert.AreEqual(1, restored.ChunkDeltas.Length);
             Assert.AreEqual(new Vector2Int(2, 3), restored.ChunkDeltas[0].ChunkCoordinates);
         }
+
+        [Test]
+        public void ResolveSavePathReturnsFileInsidePersistentDataPath()
+        {
+            var resolved = SaveManager.ResolveSavePath("slot-1.json");
+            Assert.AreEqual(
+                System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.persistentDataPath, "slot-1.json")),
+                resolved);
+        }
+
+        [Test]
+        public void ResolveSavePathDefaultsWhenNameMissing()
+        {
+            Assert.DoesNotThrow(() => SaveManager.ResolveSavePath(null));
+            Assert.DoesNotThrow(() => SaveManager.ResolveSavePath("   "));
+        }
+
+        [TestCase("../escape.json")]
+        [TestCase("../../etc/passwd")]
+        [TestCase("sub/dir.json")]
+        [TestCase("nested\\save.json")]
+        public void ResolveSavePathRejectsTraversalAndSeparators(string fileName)
+        {
+            Assert.Throws<System.ArgumentException>(() => SaveManager.ResolveSavePath(fileName));
+        }
     }
 }
