@@ -119,27 +119,12 @@ namespace ProjectEmber.Rendering
             var vertices = new List<Vector3>();
             var colors = new List<Color>();
             var triangles = new List<int>();
-            var sortedLayers = new List<VectorLayer>(data.Layers);
-            sortedLayers.Sort((left, right) => left.SortingOrderWithinSprite.CompareTo(right.SortingOrderWithinSprite));
 
-            foreach (var layer in sortedLayers)
+            foreach (var tessellated in VectorSpriteTessellator.Tessellate(data))
             {
-                if (layer == null || !layer.CloseLoop)
-                {
-                    continue;
-                }
-
-                var points = layer.GetRenderPoints();
-                if (points.Length < 3)
-                {
-                    continue;
-                }
-
-                var layerTriangles = PolygonTriangulator.Triangulate(points);
-                if (layerTriangles.Count == 0)
-                {
-                    continue;
-                }
+                var layer = tessellated.Layer;
+                var points = tessellated.Points;
+                var layerTriangles = tessellated.Triangles;
 
                 var vertexOffset = vertices.Count;
                 var z = layer.SortingOrderWithinSprite * -0.001f;
