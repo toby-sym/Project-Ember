@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEngine;
 
 namespace ProjectEmber.Editor
 {
@@ -11,6 +12,7 @@ namespace ProjectEmber.Editor
 
         public static void BuildWindows64()
         {
+            ApplyVersionFromEnvironment();
             Build(
                 BuildTarget.StandaloneWindows64,
                 Path.Combine("Builds", "StandaloneWindows64", "ProjectEmber.exe"));
@@ -26,6 +28,20 @@ namespace ProjectEmber.Editor
             }
 
             Build(buildTarget, outputPath);
+        }
+
+        private static void ApplyVersionFromEnvironment()
+        {
+            var version = Environment.GetEnvironmentVariable("PROJECT_EMBER_VERSION");
+            if (!string.IsNullOrWhiteSpace(version))
+            {
+                // Strip leading 'v' prefix if present (e.g. "v0.1.0-alpha.5" -> "0.1.0-alpha.5")
+                if (version.StartsWith("v", StringComparison.OrdinalIgnoreCase))
+                    version = version.Substring(1);
+
+                PlayerSettings.bundleVersion = version;
+                Debug.Log($"[ProjectEmberBuildAutomation] Set bundleVersion to {version}");
+            }
         }
 
         private static void Build(BuildTarget buildTarget, string outputPath)
