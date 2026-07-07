@@ -128,8 +128,16 @@ namespace ProjectEmber.Save
                 return false;
             }
 
-            var resolvedName = string.IsNullOrWhiteSpace(fileName) ? DefaultSaveFileName : fileName;
-            var path = Path.Combine(Application.persistentDataPath, resolvedName);
+            string path;
+            try
+            {
+                path = ResolveSavePath(fileName);
+            }
+            catch (ArgumentException e)
+            {
+                Debug.LogError($"[SaveManager] Rejected invalid save file name: {e.Message}");
+                return false;
+            }
 
             try
             {
@@ -155,8 +163,16 @@ namespace ProjectEmber.Save
 
         public static SaveProfile ReadFromDisk(string fileName)
         {
-            var resolvedName = string.IsNullOrWhiteSpace(fileName) ? DefaultSaveFileName : fileName;
-            var path = Path.Combine(Application.persistentDataPath, resolvedName);
+            string path;
+            try
+            {
+                path = ResolveSavePath(fileName);
+            }
+            catch (ArgumentException e)
+            {
+                Debug.LogError($"[SaveManager] Rejected invalid save file name: {e.Message}");
+                return null;
+            }
 
             if (!File.Exists(path))
             {
@@ -178,6 +194,39 @@ namespace ProjectEmber.Save
                 Debug.LogError($"[SaveManager] Permission denied reading save file '{path}': {e.Message}");
                 return null;
             }
+        }
+
+        public static string ResolveSavePath(string fileName)
+        {
+            var name = string.IsNullOrWhiteSpace(fileName) ? DefaultSaveFileName : fileName;
+
+            // Reject anything that is not a bare file name. Separators are checked
+            // explicitly (both '/' and '\') so validation is identical across
+            // platforms, since on Unix '\' is a legal file-name character.
+            if (name.IndexOf('/') >= 0
+                || name.IndexOf('\\') >= 0
+                || name.IndexOf('\0') >= 0
+                || name == "."
+                || name == ".."
+                || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                throw new System.ArgumentException(
+                    "Save file name must be a bare file name without path separators or traversal segments.",
+                    nameof(fileName));
+            }
+
+            var root = Application.persistentDataPath;
+            var fullPath = Path.GetFullPath(Path.Combine(root, name));
+            var rootPrefix = Path.GetFullPath(root) + Path.DirectorySeparatorChar;
+
+            if (!fullPath.StartsWith(rootPrefix, System.StringComparison.Ordinal))
+            {
+                throw new System.ArgumentException(
+                    "Resolved save path escapes the persistent data directory.",
+                    nameof(fileName));
+            }
+
+            return fullPath;
         }
     }
 }
